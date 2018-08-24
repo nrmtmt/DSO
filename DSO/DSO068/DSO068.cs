@@ -15,8 +15,6 @@ namespace DSO.DSO068
         }
         public override CurrParamDataFrame GetCurrentParameters()
         {
-            for (int i = 0; i < 100; i++)
-            {
                 try
                 {
                     if (WriteFrame(new ScopeControlFrames.GetParam()))
@@ -30,7 +28,6 @@ namespace DSO.DSO068
                     //System.Threading.Thread.Sleep(i);
                    
                 }
-            }
             return null;
         }
 
