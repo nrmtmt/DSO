@@ -19,8 +19,8 @@ namespace DSO
         public delegate void InfoEventHandler();
 
 
+        private List<byte> LongBuffer = new List<byte>();
         private byte[] CurrentBuffer = null;
-        private byte[] LongBuffer = null;
 
         public JyeScope(IStreamResource port)
         {
@@ -30,26 +30,38 @@ namespace DSO
 
         private void Port_DataReceivedEvent(object sender, EventArgs e)
         {
+            //populate buffer
             Info(sender, null);
             CurrentBuffer = ((byte[]) sender);
+            LongBuffer.AddRange(CurrentBuffer);
+  
+            if (LongBuffer.Count() > 2048) //for now length of full buffer
+            {
+                GenerateFrame(LongBuffer.ToArray());
+                LongBuffer.Clear(); ;
+            }
+        }
+
+        private void GenerateFrame(byte[] data)
+        {
             try
             {
-                var DataFrame = new DataBlockDataFrame(CurrentBuffer);
-                if (DataFrame != null && DataFrame.Data.Count() > 254 )
+                var DataFrame = new DataBlockDataFrame(data);
+                if (DataFrame != null)
                 {
                     byte[] rawData = new byte[DataFrame.Data.Count() - 14]; //4 reserved
                     for (int i = 5; i < DataFrame.Data.Count() - 9; i++) //[syncChar][frameID][frameSize][frameSize][frameFunc][data1]...[dataN][8][0][0][0][0][0][0][0][0]
                     {
                         rawData[i - 5] = DataFrame.Data[i];
                     }
-                   NewDataInBuffer(rawData, null);
+                    NewDataInBuffer(rawData, null);
                 }
             }
             catch (InvalidDataFrameException ex)
             {
                 try
                 {
-                    var DataFrame = new DataSampleDataFrame(CurrentBuffer);
+                    var DataFrame = new DataSampleDataFrame(data);
                     if (DataFrame != null)
                     {
                         byte[] rawData = new byte[DataFrame.Data.Count() - 13]; //3 reserved
@@ -64,10 +76,7 @@ namespace DSO
                 {
 
                 }
-             
-
             }
-          
         }
 
         public IScope Create()
@@ -173,15 +182,11 @@ namespace DSO
         {
             do
             {
-                if (SerialPort.BytesToRead > 1024)
-                {
-                    int BufferSize = 1024;
-                    byte[] buffer = new byte[BufferSize];
-                    SerialPort.Read(buffer, 0, BufferSize);
+                    int bufferSize = SerialPort.BytesToRead;
+                    byte[] buffer = new byte[bufferSize];
+                    SerialPort.Read(buffer, 0, bufferSize);
                     Port_DataReceivedEvent(buffer, null);
-                    //SerialPort.DiscardInBuffer();
-                }
-
+                    Thread.Sleep(50);
             } while (true);
 
         }
@@ -191,6 +196,10 @@ namespace DSO
         public byte[] GetBuffer()
         {
             return CurrentBuffer;
+        }
+        public byte[] GetLongBuffer()
+        {
+            return LongBuffer.ToArray();
         }
 
         public bool StopCapture()

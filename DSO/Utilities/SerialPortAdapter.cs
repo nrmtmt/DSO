@@ -16,14 +16,13 @@ namespace DSO
         private const string NewLine = "\r\n";
         private SerialPort _serialPort;
 
-        private int bufferSize = 2048;
         public event System.EventHandler DataReceivedEvent;
 
         public SerialPortAdapter(SerialPort serialPort)
         {
             Debug.Assert(serialPort != null, "Argument serialPort cannot be null.");
             _serialPort = serialPort;
-           // _serialPort.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
+            //_serialPort.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
             if (!serialPort.IsOpen)
             {
                 serialPort.Open();
@@ -46,11 +45,6 @@ namespace DSO
         {
             get { return _serialPort.WriteTimeout; }
             set { _serialPort.WriteTimeout = value; }
-        }
-
-        public int BufferSize
-        {
-            get { return bufferSize; }  
         }
 
         public int BytesToRead
@@ -94,13 +88,6 @@ namespace DSO
                 _serialPort?.Dispose();
                 _serialPort = null;
             }
-        }
-
-        private void ReadBuffer(object sender, SerialDataReceivedEventArgs e)
-        {
-            byte[] data = new byte[bufferSize];
-            _serialPort.Read(data, 0, bufferSize);
-            DataReceivedEvent(data, null);
         }
 
         private void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)

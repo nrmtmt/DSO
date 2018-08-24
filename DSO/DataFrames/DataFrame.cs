@@ -74,7 +74,7 @@ namespace DSO
                     {
                         var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
 
-                        if (frameSize > 3) //to avoid blank frames //need to change to something more sophisticated
+                        if (frameSize > 3 ) //to avoid blank or corrupted frames //need to change to something more sophisticated
                         {
                             byte[] frame = new byte[frameSize + 1];
                             for (int z = 0; z <= frameSize; z++)
@@ -111,7 +111,7 @@ namespace DSO
                 {
                     throw new InvalidDataFrameException("Wrong DataFrame - invalid SyncCharacter");
                 }
-                if (FrameSize < 3)
+                if (FrameSize < 3 || FrameSize > 1096)
                 {
                     throw new InvalidDataFrameException("Wrong DataFrame - invalid FrameSize");
                 }

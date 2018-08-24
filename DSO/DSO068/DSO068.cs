@@ -25,7 +25,7 @@ namespace DSO.DSO068
                 }
                 catch (InvalidDataFrameException ex)
                 {
-                    //System.Threading.Thread.Sleep(i);
+                    System.Threading.Thread.Sleep(10);
                    
                 }
             return null;
