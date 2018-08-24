@@ -136,7 +136,7 @@ namespace DSO.ScopeControlFrames
     }
     public class SetState : DataFrame
     {
-        public SetState(Util.ScopeState state) : base()
+        public SetState(Config.ScopeState state) : base()
         {
             BitArray array = new BitArray(8, false);
             if((int)state == 0)
@@ -200,7 +200,7 @@ namespace DSO.ScopeControlFrames
     }
     public class EnterDataLogMode : DataFrame
     {
-        public EnterDataLogMode(Util.DataLoggerRefVoltage refV, Util.DataLoggerDataAdjustment dA) : base()
+        public EnterDataLogMode(Config.DataLoggerRefVoltage refV, Config.DataLoggerDataAdjustment dA) : base()
         {
             BitArray array = new BitArray(8, false);
             if ((int)dA == 1)

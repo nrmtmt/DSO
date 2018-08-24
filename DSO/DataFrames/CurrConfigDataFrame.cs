@@ -49,32 +49,32 @@ namespace DSO
                 return bit[1];
             }
         }
-        public Util.VerticalSensitivity MaxVerticalSensitivity
+        public Config.VerticalSensitivity MaxVerticalSensitivity
         {
             get
             {
-                return (Util.VerticalSensitivity)Data[9];
+                return (Config.VerticalSensitivity)Data[9];
             }
         }
-        public Util.VerticalSensitivity MinVerticalSensitivity
+        public Config.VerticalSensitivity MinVerticalSensitivity
         {
             get
             {
-                return (Util.VerticalSensitivity)Data[10];
+                return (Config.VerticalSensitivity)Data[10];
             }
         }
-        public Util.Coupling MaxCoupleSetting //?
+        public Config.Coupling MaxCoupleSetting //?
         {
             get
             {
-                return (Util.Coupling)Data[11];
+                return (Config.Coupling)Data[11];
             }
         }
-        public Util.Coupling MinCoupleSetting //?
+        public Config.Coupling MinCoupleSetting //?
         {
             get
             {
-                return (Util.Coupling)Data[12];
+                return (Config.Coupling)Data[12];
             }
         }
         public int MaxVerticalPosition
@@ -93,46 +93,46 @@ namespace DSO
                 return bytes.ToInt();
             }
         }
-        public Util.Timebase MaxTimebaseSetting
+        public Config.Timebase MaxTimebaseSetting
         {
             get
             {
-                return (Util.Timebase)Data[25];
+                return (Config.Timebase)Data[25];
             }
         }
-        public Util.Timebase MinTimebaseSetting
+        public Config.Timebase MinTimebaseSetting
         {
             get
             {
-                return (Util.Timebase)Data[26];
+                return (Config.Timebase)Data[26];
             }
         }
-        public Util.TriggerMode MaxTriggerModeSetting
+        public Config.TriggerMode MaxTriggerModeSetting
         {
             get
             {
-                return (Util.TriggerMode)Data[31];
+                return (Config.TriggerMode)Data[31];
             }
         }
-        public Util.TriggerMode MinTriggerModeSetting
+        public Config.TriggerMode MinTriggerModeSetting
         {
             get
             {
-                return (Util.TriggerMode)Data[32];
+                return (Config.TriggerMode)Data[32];
             }
         }
-        public Util.Slope MaxSlopeModeSetting
+        public Config.Slope MaxSlopeModeSetting
         {
             get
             {
-                return (Util.Slope)Data[33];
+                return (Config.Slope)Data[33];
             }
         }
-        public Util.Slope MinSlopeModeSetting
+        public Config.Slope MinSlopeModeSetting
         {
             get
             {
-                return (Util.Slope)Data[34];
+                return (Config.Slope)Data[34];
             }
         }
         public int MaxTriggerLevel

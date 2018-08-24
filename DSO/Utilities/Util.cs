@@ -45,14 +45,13 @@ namespace DSO
         }
     }
 
-    public class Util
+    public class Config
     {
         public enum Coupling
         {
             DC = 0,
             AC = 1,
             GND = 2,
-            Other = 50
         }
 
         public static  int[] RecLength = new int[] { 256, 512, 1024 };
@@ -61,7 +60,6 @@ namespace DSO
         {
             Falling = 0,
             Rising = 1,
-            Other = 50
         }
 
         public enum TriggerMode
@@ -69,7 +67,6 @@ namespace DSO
             Auto = 0,
             Normal = 1,
             Single = 2,
-            Other = 50
         }
 
         public enum Timebase
@@ -103,7 +100,6 @@ namespace DSO
             div2us = 29, //0x1D,
             div1us = 30, //0x1E
             div500ns = 31, //0x1f
-            divOther = 50 // other       
         }
         public enum VerticalSensitivity
         {
@@ -116,13 +112,11 @@ namespace DSO
             div50mV = 11,
             div20mV = 12,
             div10mV = 13,
-            divOther = 50 // other       
         }
         public enum ScopeState
         {
             AutoState = 0,
             ManualState = 1,
-            OtherState = 50 // other       
         }
         public enum DataLoggerRefVoltage
         {

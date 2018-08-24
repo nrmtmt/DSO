@@ -15,7 +15,7 @@ namespace DSO
                 throw new InvalidDataFrameException("Wrong CurrParamDataFrame - invalid FrameID or data length");
             }
         }
-        public CurrParamDataFrame(Util.Slope Slope, Util.Timebase TBase, Util.TriggerMode Trigger, int trigLevel, byte trigPos, int recLength)
+        public CurrParamDataFrame(Config.Slope Slope, Config.Timebase TBase, Config.TriggerMode Trigger, int trigLevel, byte trigPos, int recLength)
         {
             byte[] data = new byte[37];
             data[0] = 0xFE; data[1] = 0xC0; data[2] = 0x24; data[4] = 0x22;
@@ -28,13 +28,13 @@ namespace DSO
             base.Generate(data);
         }
        
-        public Util.VerticalSensitivity VSensitivity
+        public Config.VerticalSensitivity VSensitivity
         {
-            get { return (Util.VerticalSensitivity)Data[5]; }
+            get { return (Config.VerticalSensitivity)Data[5]; }
         }
-        public Util.Coupling Couple
+        public Config.Coupling Couple
         {
-            get { return (Util.Coupling)Data[6]; }
+            get { return (Config.Coupling)Data[6]; }
         }
         public int VPosition
         {
@@ -44,17 +44,17 @@ namespace DSO
                 return bytes.ToInt();  // return ((Data[3] << 8) + Data[2]);
             }
         }
-        public Util.Timebase TBase
+        public Config.Timebase TBase
         {
-            get { return (Util.Timebase)Data[13]; }
+            get { return (Config.Timebase)Data[13]; }
         }
-        public Util.TriggerMode TriggerMode
+        public Config.TriggerMode TriggerMode
         {
-            get { return (Util.TriggerMode)Data[17]; }
+            get { return (Config.TriggerMode)Data[17]; }
         }
-        public Util.Slope TriggerSlope
+        public Config.Slope TriggerSlope
         {
-            get { return (Util.Slope)Data[18]; }
+            get { return (Config.Slope)Data[18]; }
         }
         public int TriggerLevel
         {

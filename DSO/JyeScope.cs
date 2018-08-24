@@ -1,23 +1,28 @@
-﻿using DSO.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Threading;
+using System.Timers;
 
 namespace DSO
 {
     public abstract class JyeScope : IScope
     {
-        // public event EventHandler DataReceived = new EventHandler((byte[] data) => { });
-        // public delegate void EventHandler(byte[] data);
         public event System.EventHandler NewDataInBuffer = delegate { };
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
-
+        private System.Timers.Timer ReadTimer;
+        private int _readDelay = 50;
+        private int _recordLength = 1024;
+        private bool _stopCapture = false;
+        private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
+        private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
+        private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
+ 
 
         private List<byte> LongBuffer = new List<byte>();
         private byte[] CurrentBuffer = null;
@@ -26,6 +31,19 @@ namespace DSO
         {
             SerialPort = port;
             port.DataReceivedEvent += Port_DataReceivedEvent;
+
+            foreach (var couple in (int[])Enum.GetValues(typeof(DSO.Config.Coupling)))
+            {
+                _AvailableCoupleSettings.Add(couple, Enum.GetName(typeof(DSO.Config.Coupling), couple));
+            }
+            foreach (var mode in (int[])Enum.GetValues(typeof(DSO.Config.TriggerMode)))
+            {
+              _AvailableTriggerModeSettings.Add(mode, Enum.GetName(typeof(DSO.Config.TriggerMode), mode));
+            }
+            foreach (var slope in (int[])Enum.GetValues(typeof(DSO.Config.Slope)))
+            {
+                _AvailableTriggerSlopeSettings.Add(slope, Enum.GetName(typeof(DSO.Config.Slope), slope));
+            }
         }
 
         private void Port_DataReceivedEvent(object sender, EventArgs e)
@@ -35,7 +53,7 @@ namespace DSO
             CurrentBuffer = ((byte[]) sender);
             LongBuffer.AddRange(CurrentBuffer);
   
-            if (LongBuffer.Count() > 2048) //for now length of full buffer
+            if (LongBuffer.Count() > _recordLength)
             {
                 GenerateFrame(LongBuffer.ToArray());
                 LongBuffer.Clear(); ;
@@ -96,8 +114,165 @@ namespace DSO
             private set;
         }
 
+        public abstract Dictionary<int, string> AvailableTimebaseSettings { get; }
+    
+
+        public Dictionary<int, string> AvailableCoupleSettings
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Dictionary<int, string> AvailableTriggerSlopeSettings
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public abstract Dictionary<int, string> AvailableSenitivitySettings { get; }
+     
+
+        public Dictionary<int, string> AvailableTriggerModeSettings
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int ReadDelay
+        {
+            get
+            {
+               return _readDelay;
+            }
+
+            set
+            {
+                _readDelay = value;
+            }
+        }
+
+        public int TimeBase
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int TriggerPos
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int TriggerLevel
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int Sensitivity
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int TriggerMode
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int Couple
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int TriggerSlope
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public abstract Dictionary<int, string> AvailableRecordLength { get; }
+
+        public int RecordLength
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public bool Connect()
         {
+            //ReadTimer = new System.Timers.Timer();
+            //ReadTimer.Elapsed += new System.Timers.ElapsedEventHandler(ReadBuffer);
+            //ReadTimer.Interval = _readDelay;
+            //ReadTimer.Start();
+            Thread BackgroundReader = new Thread(ReadBuffer);
+            BackgroundReader.IsBackground = true;
+            BackgroundReader.Start();
+
             WriteFrame(new ScopeControlFrames.EnterUSBScopeMode());
             
             if (ScopeReady())
@@ -112,6 +287,7 @@ namespace DSO
         public bool Disconnect()
         {
             WriteFrame(new ScopeControlFrames.ExitUSBScopeMode());
+            _stopCapture = true;
             return true;
         }
 
@@ -172,27 +348,22 @@ namespace DSO
 
         public bool StartCapture()
         {
-            Thread myThread = new Thread(BackgroundCapture);
-            myThread.IsBackground = true;
-            myThread.Start();
+            _stopCapture = false;
             return true;
-
         }
-        private void BackgroundCapture()
+       
+        private void ReadBuffer()
         {
-            do
-            {
-                    int bufferSize = SerialPort.BytesToRead;
-                    byte[] buffer = new byte[bufferSize];
-                    SerialPort.Read(buffer, 0, bufferSize);
-                    Port_DataReceivedEvent(buffer, null);
-                    Thread.Sleep(50);
-            } while (true);
-
+            while(!_stopCapture)
+                {
+                int bufferSize = SerialPort.BytesToRead;
+                byte[] buffer = new byte[bufferSize];
+                SerialPort.Read(buffer, 0, bufferSize);
+                Port_DataReceivedEvent(buffer, null);
+                Thread.Sleep(_readDelay);
+            }
+               
         }
-
-
-
         public byte[] GetBuffer()
         {
             return CurrentBuffer;
@@ -203,6 +374,11 @@ namespace DSO
         }
 
         public bool StopCapture()
+        {
+            throw new NotImplementedException();
+        }
+
+        public long[] GetScaledData()
         {
             throw new NotImplementedException();
         }

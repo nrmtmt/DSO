@@ -50,12 +50,7 @@
     <Compile Include="JyeScope.cs" />
     <Compile Include="Class1.cs" />
     <Compile Include="DataFrames\DataFrame.cs" />
-    <Compile Include="Interfaces\IGetCurrentConfig.cs" />
-    <Compile Include="Interfaces\IGetCurrentParam.cs" />
-    <Compile Include="Interfaces\IGetData.cs" />
     <Compile Include="Interfaces\IScope.cs" />
-    <Compile Include="Interfaces\ISetCurrentConfig.cs" />
-    <Compile Include="Interfaces\ISetCurrentParam.cs" />
     <Compile Include="Interfaces\IStreamResource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScopeControlFrames\GetParam.cs" />
