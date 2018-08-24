@@ -16,7 +16,7 @@ namespace DSO
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
         private System.Timers.Timer ReadTimer;
-        private int _readDelay = 50;
+        private int _readDelay = 30;
         private int _recordLength = 1024;
         private bool _stopCapture = false;
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
@@ -297,14 +297,6 @@ namespace DSO
             return true;
         }
 
-        protected byte[] ReadData()
-        {
-             byte[] data = new byte[2048];
-             SerialPort.Read(data, 0, data.Length);
-            //var data = SerialPort.ReadExisting
-            return data;
-        }
-        
 
         public CurrConfigDataFrame GetCurrentConfig() //seems to be same in each jye scope
         {
@@ -318,7 +310,6 @@ namespace DSO
                 }
                 catch (InvalidDataFrameException ex)
                 {
-                   System.Threading.Thread.Sleep(10);
                 }
             }
             return null;
@@ -336,7 +327,6 @@ namespace DSO
             }
             catch (InvalidDataFrameException ex)
             {
-                System.Threading.Thread.Sleep(10);
             }
             return false;
         }
