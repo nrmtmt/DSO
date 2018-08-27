@@ -103,6 +103,8 @@ namespace DSO
         }
         public enum VerticalSensitivity
         {
+            div20v = 3,
+            div10v = 4,
             div5V = 5,
             div2V = 6,
             div1V = 7,
@@ -112,6 +114,8 @@ namespace DSO
             div50mV = 11,
             div20mV = 12,
             div10mV = 13,
+            div5mV = 14,
+            div2mV = 15,
         }
         public enum ScopeState
         {
