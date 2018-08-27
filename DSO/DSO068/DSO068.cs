@@ -52,33 +52,5 @@ namespace DSO.DSO068
                 throw new NotImplementedException();
             }
         }
-
-        public override CurrParamDataFrame GetCurrentParameters()
-        {
-                try
-                {
-                    if (WriteFrame(new ScopeControlFrames.GetParam()))
-                    {
-                        CurrParamDataFrame CurrParam = new CurrParamDataFrame(base.GetBuffer());
-                        return CurrParam;
-                    }
-                }
-                catch (InvalidDataFrameException ex)
-                {
-
-                }
-            return null;
-        }
-
-        public override DataFrame GetData()
-        {
-         
-            throw new NotImplementedException();
-        }
-
-        public override CurrParamDataFrame SetCurrentParameters()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

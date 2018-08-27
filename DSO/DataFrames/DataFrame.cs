@@ -55,6 +55,7 @@ namespace DSO
             return found;
         }
         private static readonly byte SyncChar = 254;
+
         public DataFrame()
         {
            
@@ -85,7 +86,7 @@ namespace DSO
                                 }
                                 catch (IndexOutOfRangeException ex)
                                 {
-                                    frame[z] = SyncChar; //sometimes sync char is missing
+                                   // frame[z] = SyncChar; //sometimes sync char is missing
                                 }
                             }
                             Generate(frame);
@@ -95,7 +96,35 @@ namespace DSO
                 }
 
             }
-           
+        }
+
+        public override bool Equals(object obj)
+        {
+            try
+            {
+                DataFrame data = (DataFrame)obj;
+                if (this.FrameID == data.FrameID && this.FrameSize == data.FrameSize && this.FrameSubID == data.FrameSubID)
+                {
+                    if (this.Data.SequenceEqual(data.Data))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        public static bool operator == (DataFrame x, DataFrame y)
+        {
+            return x.Equals(y);
+        }
+
+        public static bool operator != (DataFrame x, DataFrame y)
+        {
+            return !(x == y);
         }
 
         protected void Generate(byte[] data)

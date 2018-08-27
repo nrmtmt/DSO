@@ -15,6 +15,14 @@ namespace DSO
                 throw new InvalidDataFrameException("Wrong CurrParamDataFrame - invalid FrameID or data length");
             }
         }
+        /// <summary>
+        /// <param name="Slope">Slope</param>
+        /// <param name="TBase">Time base</param>
+        /// <param name="Trigger">Trigger mode</param>
+        /// <param name="trigLevel">Trigger level (0 - 100%)</param>
+        /// <param name="trigPos">Trigger position (0 - 255)</param>
+        /// <param name="recLength">Record length</param>
+        /// </summary>
         public CurrParamDataFrame(Config.Slope Slope, Config.Timebase TBase, Config.TriggerMode Trigger, int trigLevel, byte trigPos, int recLength)
         {
             byte[] data = new byte[37];
