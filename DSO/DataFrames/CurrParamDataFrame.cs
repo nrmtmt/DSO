@@ -17,16 +17,18 @@ namespace DSO
         }
         /// <summary>
         /// <param name="Slope">Slope</param>
+        /// <param name="Sensitivity">Sensitivity</param>
         /// <param name="TBase">Time base</param>
         /// <param name="Trigger">Trigger mode</param>
         /// <param name="trigLevel">Trigger level (0 - 100%)</param>
         /// <param name="trigPos">Trigger position (0 - 255)</param>
         /// <param name="recLength">Record length</param>
         /// </summary>
-        public CurrParamDataFrame(Config.Slope Slope, Config.Timebase TBase, Config.TriggerMode Trigger, int trigLevel, byte trigPos, int recLength)
+        public CurrParamDataFrame(Config.VerticalSensitivity Sensitivity, Config.Timebase TBase, Config.Slope Slope, Config.TriggerMode Trigger, int trigLevel, byte trigPos, int recLength)
         {
             byte[] data = new byte[37];
             data[0] = 0xFE; data[1] = 0xC0; data[2] = 0x24; data[4] = 0x22;
+            data[5] = (byte)Sensitivity;
             data[13] = (byte)TBase; data[17] = (byte)Trigger; data[18] = (byte)Slope;
             byte[] bytes = BitConverter.GetBytes(trigLevel);
             data[19] = bytes[0]; data[20] = bytes[1];
@@ -84,6 +86,30 @@ namespace DSO
                 return bytes.ToInt();
             }
         }
+        public override bool Equals(object obj)
+        {
+            try
+            {
+                CurrParamDataFrame data = (CurrParamDataFrame)obj;
+                if (this.Couple == data.Couple 
+                    && this.TBase == data.TBase
+                    && this.TriggerLevel == data.TriggerLevel
+                    && this.TriggerMode == data.TriggerMode
+                    && this.TriggerPosition == data.TriggerPosition
+                    && this.TriggerSlope == data.TriggerSlope
+                    && this.VPosition == data.VPosition
+                    && this.VSensitivity == data.VSensitivity)
+                {     
+                        return true;
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
     }
 }
 

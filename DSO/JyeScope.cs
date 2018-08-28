@@ -19,17 +19,18 @@ namespace DSO
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
-        private int timeoutTime = 1000; //time in with TimeoutException will be thrown
+        private int timeoutTime = 6000; //time in with TimeoutException will be thrown
         //back fields
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
+        private bool _startCapture = false;
         private int _readDelay = 30;
-        private int _recordLength = 1024;
-        private int _timeBase = 2;
+        private int _recordLength = 256;
+        private int _timeBase = 3;
         private int _triggerPos = 50;
         private int _triggerLevel = 100;
-        private int _senstivity = 5;
+        private int _sensitivity = 7;
         private int _triggerMode = 1;
         private int _couple = 1;
         private int _triggerSlope = 1;
@@ -128,15 +129,15 @@ namespace DSO
             {
                 if (WriteFrame(new ScopeControlFrames.GetConfig()))
                 {
-                    var param = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), ref CurrentBuffer, ref timeoutTime);
-                    return param;
+                    var conf = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), ref CurrentBuffer, ref timeoutTime);
+                  
+                    return conf;
                 }
             }
             catch (TimeoutException)
             {
-                GetCurrentConfig();
             }
-            return null;
+            return GetCurrentConfig();
         }
 
         public CurrParamDataFrame GetCurrentParameters()
@@ -146,14 +147,21 @@ namespace DSO
                 if (WriteFrame(new ScopeControlFrames.GetParam()))
                 {
                     var param = (CurrParamDataFrame)GetAcknowledgedFrame.Get(typeof(CurrParamDataFrame), ref CurrentBuffer, ref timeoutTime);
+                    _recordLength = param.RecordLength;
+                    _timeBase = (int)param.TBase;
+                    _triggerPos = param.TriggerPosition;
+                    _triggerLevel = param.TriggerLevel;
+                    _sensitivity = (int)param.VSensitivity;
+                    _triggerMode = (int)param.TriggerMode;
+                    _couple = (int)param.Couple;
+                    _triggerSlope = (int)param.TriggerSlope;
                     return param;
                 }
             }
             catch (TimeoutException)
             {
-                GetCurrentParameters();
             }
-            return null;
+            return GetCurrentParameters();
         }
 
         private bool SetConfig()
@@ -161,28 +169,30 @@ namespace DSO
             return true;
         }
 
-        public void SetCurrentParameters()
+        public bool SetCurrentParameters()
         {
             var stopwatch = Stopwatch.StartNew();
-            do
+            while (stopwatch.ElapsedMilliseconds < timeoutTime) 
             {
-                var curParam = new DSO.CurrParamDataFrame((DSO.Config.Slope)_triggerSlope,
-                                                    (DSO.Config.Timebase)_timeBase,
-                                                    (DSO.Config.TriggerMode)_triggerMode,
-                                                    (byte)_triggerLevel,
-                                                    (byte)_triggerPos,
-                                                    DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)]);
+                var curParam = new DSO.CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
+                                                             (DSO.Config.Timebase)_timeBase,
+                                                             (DSO.Config.Slope)_triggerSlope,
+                                                             (DSO.Config.TriggerMode)_triggerMode,
+                                                             (byte)_triggerLevel, 
+                                                             (byte)_triggerPos, 
+                                                             DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)]);
                 WriteFrame(curParam);
+                Thread.Sleep(timeoutTime);
                 var curParam2 = GetCurrentParameters();
-                if (curParam != curParam2)
+                if (!curParam.Equals(curParam2))
                 {
                     //do it again
                 }else
                 {
-                    break;
+                    return true;
                 }
-            } while (stopwatch.ElapsedMilliseconds < timeoutTime);
-            throw new TimeoutException("Timeout while waiting for ScopeReady acknowledge");
+            } 
+            throw new TimeoutException("Timeout while waiting for acknowledge");
         }
 
         private void ReadBuffer()
@@ -190,13 +200,19 @@ namespace DSO
             SerialPort.DiscardInBuffer();
             while (!_stopCapture)
             {
-                int bufferSize = SerialPort.BytesToRead;
-                byte[] buffer = new byte[bufferSize];
-                SerialPort.Read(buffer, 0, bufferSize);
+                byte[] buffer = InstReadBuffer();
                 Port_DataReceivedEvent(buffer, null);
                 Thread.Sleep(_readDelay);
             }
             CurrentBuffer = null;
+        }
+
+        private byte[] InstReadBuffer()
+        {
+            int bufferSize = SerialPort.BytesToRead;
+            byte[] buffer = new byte[bufferSize];
+            SerialPort.Read(buffer, 0, bufferSize);
+            return buffer;
         }
 
         protected byte[] GetBuffer()
@@ -218,11 +234,14 @@ namespace DSO
             {
                 try
                 {
-                    int bufferSize = SerialPort.BytesToRead;
-                    byte[] buffer = new byte[bufferSize];
-                    SerialPort.Read(buffer, 0, bufferSize);
-                    if (new ScopeControlFrames.ScopeReady(buffer) != null)
+                    CurrentBuffer = InstReadBuffer();
+                    if (new ScopeControlFrames.ScopeReady(CurrentBuffer) != null)
                     {
+                        Thread BackgroundReader = new Thread(ReadBuffer);
+                        BackgroundReader.IsBackground = true;
+                        BackgroundReader.Start();
+                        GetCurrentConfig();
+                        GetCurrentParameters();
                         return true;
                     }
                 }
@@ -256,9 +275,6 @@ namespace DSO
 
         public bool StartCapture()
         {
-            Thread BackgroundReader = new Thread(ReadBuffer);
-            BackgroundReader.IsBackground = true;
-            BackgroundReader.Start();
             return true;
         }
 
@@ -360,12 +376,12 @@ namespace DSO
         {
             get
             {
-                return _senstivity;
+                return _sensitivity;
             }
 
             set
             {
-                _senstivity = value;
+                _sensitivity = value;
             }
         }
 

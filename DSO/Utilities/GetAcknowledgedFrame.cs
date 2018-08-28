@@ -11,8 +11,7 @@ namespace DSO.Utilities
     {
         public static DataFrame Get(Type FrameType, ref byte[] buffer, ref int timeoutTime)
         {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
+            var stopwatch = Stopwatch.StartNew();
             while (stopwatch.ElapsedMilliseconds < timeoutTime)
             {
                 try
@@ -46,9 +45,10 @@ namespace DSO.Utilities
                 {
                     //do it again
                 }
+
                 throw new TimeoutException("Timeout while waiting for frame acknowledge");
             }
-            return null;
+            return null; 
         }
     }
 }
