@@ -110,7 +110,7 @@ namespace DSO.ScopeControlFrames
         }
         public ScopeReady(byte[] data) : base(data)
         {
-            if (FrameID != 225 || FrameSubID != 79) //"O letter in ascii                                                O
+            if (FrameID != 226 || FrameSubID != 79) //"O letter in ascii                                                O
             {
                 throw new InvalidDataFrameException("Wrong ScopeReady Data Frame");
             }

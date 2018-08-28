@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Threading;
 using System.Timers;
+using System.Diagnostics;
+using DSO.Utilities;
 
 namespace DSO
 {
@@ -17,7 +19,7 @@ namespace DSO
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
-
+        private int timeoutTime = 1000; //time in with TimeoutException will be thrown
         //back fields
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
@@ -25,12 +27,12 @@ namespace DSO
         private int _readDelay = 30;
         private int _recordLength = 1024;
         private int _timeBase = 2;
-        private int _triggerPos;
-        private int _triggerLevel;
-        private int _senstivity;
-        private int _triggerMode;
-        private int _couple;
-        private int _triggerSlope;
+        private int _triggerPos = 50;
+        private int _triggerLevel = 100;
+        private int _senstivity = 5;
+        private int _triggerMode = 1;
+        private int _couple = 1;
+        private int _triggerSlope = 1;
 
         private bool _stopCapture = false;
 
@@ -119,40 +121,27 @@ namespace DSO
             return true;
         }
 
-        public CurrConfigDataFrame GetCurrentConfig() //seems to be same in each jye scope
-        {
 
-            if (WriteFrame(new ScopeControlFrames.GetConfig()))
-            {
-                try
-                {
-                    CurrConfigDataFrame CurrConfig = new CurrConfigDataFrame(CurrentBuffer);
-                    return CurrConfig;
-                }
-                catch (InvalidDataFrameException ex)
-                {
-                    GetCurrentConfig();
-                }
-            }
-            return null;
-        }
-        private bool SetConfig()
-        {
-            return true;
-        }
-        public bool ScopeReady()
+
+       
+
+        public CurrConfigDataFrame GetCurrentConfig() //seems to be same in each jye scope
         {
             try
             {
-                if (new ScopeControlFrames.ScopeReady(CurrentBuffer) != null)
+                if (WriteFrame(new ScopeControlFrames.GetConfig()))
                 {
-                    return true;
+                    var param = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), CurrentBuffer, ref timeoutTime);
+                    return param;
                 }
             }
-            catch (InvalidDataFrameException ex)
+            catch (TimeoutException)
             {
+                SerialPort.DiscardInBuffer();
+                GetCurrentConfig();
+                //throw;
             }
-            return false;
+            return null;
         }
 
         public CurrParamDataFrame GetCurrentParameters()
@@ -161,41 +150,46 @@ namespace DSO
             {
                 if (WriteFrame(new ScopeControlFrames.GetParam()))
                 {
-                    CurrParamDataFrame CurrParam = new CurrParamDataFrame(CurrentBuffer);
-                    return CurrParam;
+                    var param = (CurrParamDataFrame)GetAcknowledgedFrame.Get(typeof(CurrParamDataFrame), CurrentBuffer, ref timeoutTime);
+                    return param;
                 }
             }
-            catch (InvalidDataFrameException ex)
+            catch (TimeoutException)
             {
-                GetCurrentParameters(); //need to add some logic or timeout
+                SerialPort.DiscardInBuffer();
+                GetCurrentParameters();
+                //throw;
             }
             return null;
         }
 
-        public bool SetCurrentParameters()
+        private bool SetConfig()
         {
-            var curParam = new DSO.CurrParamDataFrame((DSO.Config.Slope)_triggerSlope, 
-                                                     (DSO.Config.Timebase)_timeBase, 
-                                                     (DSO.Config.TriggerMode)_triggerMode, 
-                                                     (byte)_triggerLevel,
-                                                     (byte)_triggerPos, 
-                                                     DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)]);
-            WriteFrame(curParam);
-            var curParam2 = GetCurrentParameters();
-            if(curParam == curParam2)
-            {
-                return true;
-            }else
-            {
-                SetCurrentParameters(); //need to add some logic or timeout
-            }
-            return false;
+            return true;
         }
 
-        public bool StartCapture()
+        public void SetCurrentParameters()
         {
-            _stopCapture = false;
-            return true;
+            var stopwatch = Stopwatch.StartNew();
+            do
+            {
+                var curParam = new DSO.CurrParamDataFrame((DSO.Config.Slope)_triggerSlope,
+                                                    (DSO.Config.Timebase)_timeBase,
+                                                    (DSO.Config.TriggerMode)_triggerMode,
+                                                    (byte)_triggerLevel,
+                                                    (byte)_triggerPos,
+                                                    DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)]);
+                WriteFrame(curParam);
+                var curParam2 = GetCurrentParameters();
+                if (curParam != curParam2)
+                {
+                    //do it again
+                }else
+                {
+                    break;
+                }
+            } while (stopwatch.ElapsedMilliseconds < timeoutTime);
+            throw new TimeoutException("Timeout while waiting for ScopeReady acknowledge");
         }
 
         private void ReadBuffer()
@@ -229,14 +223,24 @@ namespace DSO
 
             WriteFrame(new ScopeControlFrames.EnterUSBScopeMode());
 
-            if (ScopeReady())
+            var stopwatch = Stopwatch.StartNew();
+            while (stopwatch.ElapsedMilliseconds < timeoutTime)
             {
-                return true;
+                try
+                {
+                    if (new ScopeControlFrames.ScopeReady(CurrentBuffer) != null)
+                    {
+                        return true;
+                    }
+                }
+                catch (InvalidDataFrameException ex)
+                {
+                    this.SerialPort.DiscardInBuffer();
+                    WriteFrame(new ScopeControlFrames.ExitUSBScopeMode());
+                    WriteFrame(new ScopeControlFrames.EnterUSBScopeMode());
+                }
             }
-            else
-            {
-                return false;
-            }
+            throw new TimeoutException("Timeout while waiting for ScopeReady acknowledge");
         }
 
         public bool Disconnect()
@@ -255,6 +259,11 @@ namespace DSO
         {
             SerialPort.Dispose();
             return true;
+        }
+
+        public bool StartCapture()
+        {
+            throw new NotImplementedException();
         }
 
         public bool StopCapture()
