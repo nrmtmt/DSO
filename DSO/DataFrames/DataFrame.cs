@@ -124,7 +124,7 @@ namespace DSO
             {
                 var _frameSize = (ushort)((data[3] << 8) + data[2]);
                 var _count = data.Count();
-                if (_count - 1 <= _frameSize)
+                if (_count - 1 >= _frameSize)
                 {
                     SyncCharacter = data[0];
                     FrameID = data[1];

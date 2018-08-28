@@ -122,24 +122,19 @@ namespace DSO
         }
 
 
-
-       
-
         public CurrConfigDataFrame GetCurrentConfig() //seems to be same in each jye scope
         {
             try
             {
                 if (WriteFrame(new ScopeControlFrames.GetConfig()))
                 {
-                    var param = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), CurrentBuffer, ref timeoutTime);
+                    var param = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), ref CurrentBuffer, ref timeoutTime);
                     return param;
                 }
             }
             catch (TimeoutException)
             {
-                SerialPort.DiscardInBuffer();
                 GetCurrentConfig();
-                //throw;
             }
             return null;
         }
@@ -150,15 +145,13 @@ namespace DSO
             {
                 if (WriteFrame(new ScopeControlFrames.GetParam()))
                 {
-                    var param = (CurrParamDataFrame)GetAcknowledgedFrame.Get(typeof(CurrParamDataFrame), CurrentBuffer, ref timeoutTime);
+                    var param = (CurrParamDataFrame)GetAcknowledgedFrame.Get(typeof(CurrParamDataFrame), ref CurrentBuffer, ref timeoutTime);
                     return param;
                 }
             }
             catch (TimeoutException)
             {
-                SerialPort.DiscardInBuffer();
                 GetCurrentParameters();
-                //throw;
             }
             return null;
         }
@@ -194,6 +187,7 @@ namespace DSO
 
         private void ReadBuffer()
         {
+            SerialPort.DiscardInBuffer();
             while (!_stopCapture)
             {
                 int bufferSize = SerialPort.BytesToRead;
@@ -202,6 +196,7 @@ namespace DSO
                 Port_DataReceivedEvent(buffer, null);
                 Thread.Sleep(_readDelay);
             }
+            CurrentBuffer = null;
         }
 
         protected byte[] GetBuffer()
@@ -217,26 +212,24 @@ namespace DSO
         //Interface implementation
         public bool Connect()
         {
-            Thread BackgroundReader = new Thread(ReadBuffer);
-            BackgroundReader.IsBackground = true;
-            BackgroundReader.Start();
-
             WriteFrame(new ScopeControlFrames.EnterUSBScopeMode());
-
             var stopwatch = Stopwatch.StartNew();
             while (stopwatch.ElapsedMilliseconds < timeoutTime)
             {
                 try
                 {
-                    if (new ScopeControlFrames.ScopeReady(CurrentBuffer) != null)
+                    int bufferSize = SerialPort.BytesToRead;
+                    byte[] buffer = new byte[bufferSize];
+                    SerialPort.Read(buffer, 0, bufferSize);
+                    if (new ScopeControlFrames.ScopeReady(buffer) != null)
                     {
                         return true;
                     }
                 }
                 catch (InvalidDataFrameException ex)
                 {
-                    this.SerialPort.DiscardInBuffer();
                     WriteFrame(new ScopeControlFrames.ExitUSBScopeMode());
+                    Thread.Sleep(100);
                     WriteFrame(new ScopeControlFrames.EnterUSBScopeMode());
                 }
             }
@@ -263,12 +256,19 @@ namespace DSO
 
         public bool StartCapture()
         {
-            throw new NotImplementedException();
+            Thread BackgroundReader = new Thread(ReadBuffer);
+            BackgroundReader.IsBackground = true;
+            BackgroundReader.Start();
+            return true;
         }
 
         public bool StopCapture()
         {
-            throw new NotImplementedException();
+            while(CurrentBuffer!= null)
+            {
+                _stopCapture = true;
+            }
+            return true;
         }
 
         public long[] GetScaledData()

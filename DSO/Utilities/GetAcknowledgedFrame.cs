@@ -9,7 +9,7 @@ namespace DSO.Utilities
 {
     public static class GetAcknowledgedFrame
     {
-        public static DataFrame Get(Type FrameType, byte[] buffer, ref int timeoutTime)
+        public static DataFrame Get(Type FrameType, ref byte[] buffer, ref int timeoutTime)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
