@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DSO.DataFrames;
+using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DSO.Utilities
 {
@@ -11,15 +8,21 @@ namespace DSO.Utilities
     {
         public static DataFrame Get(Type FrameType, ref byte[] buffer, ref int timeoutTime)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = new Stopwatch();
+            stopwatch.Restart();
             while (stopwatch.ElapsedMilliseconds < timeoutTime)
             {
                 try
                 {
-                    if (FrameType == typeof(CurrConfigDataFrame))
+                    if (FrameType == typeof(DataFrames.DSO068.CurrConfigDataFrame))
                     {
-                        CurrConfigDataFrame CurrConfig = new CurrConfigDataFrame(buffer);
+                        DataFrames.DSO068.CurrConfigDataFrame CurrConfig = new DataFrames.DSO068.CurrConfigDataFrame(buffer);
                         return CurrConfig;
+                    }
+                    else if (FrameType == typeof(DataFrames.DSO112.CurrConfigDataFrame))
+                    {
+                        DataFrames.DSO112.CurrConfigDataFrame CurrParam = new DataFrames.DSO112.CurrConfigDataFrame(buffer);
+                        return CurrParam;
                     }
                     else if (FrameType == typeof(CurrParamDataFrame))
                     {

@@ -8,6 +8,8 @@ using System.Threading;
 using System.Timers;
 using System.Diagnostics;
 using DSO.Utilities;
+using DSO.DataFrames;
+using DSO.Interfaces;
 
 namespace DSO
 {
@@ -19,7 +21,7 @@ namespace DSO
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
-        private int timeoutTime = 6000; //time in with TimeoutException will be thrown
+        protected int timeoutTime = 100; //time in with TimeoutException will be thrown
         //back fields
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
@@ -34,11 +36,12 @@ namespace DSO
         private int _triggerMode = 1;
         private int _couple = 1;
         private int _triggerSlope = 1;
+        private int _verticalPosition = 0;
 
         private bool _stopCapture = false;
 
-        private List<byte> LongBuffer = new List<byte>();
-        private byte[] CurrentBuffer = null;
+        protected List<byte> LongBuffer = new List<byte>();
+        protected byte[] CurrentBuffer = null;
 
         public IStreamResource SerialPort
         {
@@ -121,24 +124,7 @@ namespace DSO
             SerialPort.Write(frame.Data, 0, frame.Data.Count());
             return true;
         }
-
-
-        public CurrConfigDataFrame GetCurrentConfig() //seems to be same in each jye scope
-        {
-            try
-            {
-                if (WriteFrame(new ScopeControlFrames.GetConfig()))
-                {
-                    var conf = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), ref CurrentBuffer, ref timeoutTime);
-                  
-                    return conf;
-                }
-            }
-            catch (TimeoutException)
-            {
-            }
-            return GetCurrentConfig();
-        }
+        public abstract ICurrentConfig GetCurrentConfig();
 
         public CurrParamDataFrame GetCurrentParameters()
         {
@@ -155,6 +141,7 @@ namespace DSO
                     _triggerMode = (int)param.TriggerMode;
                     _couple = (int)param.Couple;
                     _triggerSlope = (int)param.TriggerSlope;
+                    _verticalPosition = (int)param.VPosition;
                     return param;
                 }
             }
@@ -174,13 +161,15 @@ namespace DSO
             var stopwatch = Stopwatch.StartNew();
             while (stopwatch.ElapsedMilliseconds < timeoutTime) 
             {
-                var curParam = new DSO.CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
+                var curParam = new CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
                                                              (DSO.Config.Timebase)_timeBase,
                                                              (DSO.Config.Slope)_triggerSlope,
-                                                             (DSO.Config.TriggerMode)_triggerMode,
+                                                             (DSO.Config.TriggerMode)_triggerMode, 
+                                                             (DSO.Config.Coupling)_couple,
                                                              (byte)_triggerLevel, 
                                                              (byte)_triggerPos, 
-                                                             DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)]);
+                                                             DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)], 
+                                                             _verticalPosition);
                 WriteFrame(curParam);
                 Thread.Sleep(timeoutTime);
                 var curParam2 = GetCurrentParameters();
@@ -235,6 +224,7 @@ namespace DSO
                 try
                 {
                     CurrentBuffer = InstReadBuffer();
+                    var tem = new ScopeControlFrames.ScopeReady(CurrentBuffer);
                     if (new ScopeControlFrames.ScopeReady(CurrentBuffer) != null)
                     {
                         Thread BackgroundReader = new Thread(ReadBuffer);
@@ -248,7 +238,7 @@ namespace DSO
                 catch (InvalidDataFrameException ex)
                 {
                     WriteFrame(new ScopeControlFrames.ExitUSBScopeMode());
-                    Thread.Sleep(100);
+                    Thread.Sleep(10);
                     WriteFrame(new ScopeControlFrames.EnterUSBScopeMode());
                 }
             }

@@ -47,6 +47,12 @@ namespace DSO
 
     public class Config
     {
+        public enum ScopeType
+        {
+            DSO068 = 4,
+            DSO112A = 5,
+        }
+
         public enum Coupling
         {
             DC = 0,

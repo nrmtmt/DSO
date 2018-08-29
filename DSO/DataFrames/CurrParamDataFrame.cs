@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO
+namespace DSO.DataFrames
 {
     public class CurrParamDataFrame : DataFrame
     {
@@ -23,21 +23,35 @@ namespace DSO
         /// <param name="trigLevel">Trigger level (0 - 100%)</param>
         /// <param name="trigPos">Trigger position (0 - 255)</param>
         /// <param name="recLength">Record length</param>
+        /// <param name="Couple">Couple</param> vPos
+        /// <param name="vPos">Vertical position</param> vPos
         /// </summary>
-        public CurrParamDataFrame(Config.VerticalSensitivity Sensitivity, Config.Timebase TBase, Config.Slope Slope, Config.TriggerMode Trigger, int trigLevel, byte trigPos, int recLength)
+        public CurrParamDataFrame(Config.VerticalSensitivity VSensitivity, Config.Timebase TBase, Config.Slope Slope, Config.TriggerMode Trigger, Config.Coupling Couple, int trigLevel, byte trigPos, int recLength, int vPos)
         {
-            byte[] data = new byte[37];
-            data[0] = 0xFE; data[1] = 0xC0; data[2] = 0x24; data[4] = 0x22;
-            data[5] = (byte)Sensitivity;
-            data[13] = (byte)TBase; data[17] = (byte)Trigger; data[18] = (byte)Slope;
-            byte[] bytes = BitConverter.GetBytes(trigLevel);
+            byte[] data = new byte[53];
+            data[0] = 0xFE; data[1] = 0xC0; data[2] = 0x34; data[4] = 0x22;
+            data[5] = (byte)VSensitivity;
+            data[6] = (byte)Couple;
+
+            byte[] bytes = BitConverter.GetBytes(vPos);
+            data[7] = bytes[0]; data[8] = bytes[1];
+
+            data[13] = (byte)TBase;
+            data[17] = (byte)Trigger;
+            data[18] = (byte)Slope;
+
+            bytes = BitConverter.GetBytes(trigLevel);
             data[19] = bytes[0]; data[20] = bytes[1];
+
             data[21] = trigPos;
+
             bytes = BitConverter.GetBytes(recLength);
-            data[25] = bytes[0]; data[26] = bytes[1]; data[27] = bytes[2]; data[28] = bytes[3];
+            data[25] = bytes[0]; data[26] = bytes[1];
+
+            //data[27] = bytes[2]; data[28] = bytes[3];
             base.Generate(data);
         }
-       
+
         public Config.VerticalSensitivity VSensitivity
         {
             get { return (Config.VerticalSensitivity)Data[5]; }
