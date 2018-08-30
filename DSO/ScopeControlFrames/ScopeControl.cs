@@ -92,9 +92,9 @@ namespace DSO.ScopeControlFrames
 
 
 
-    public class GetParam : DataFrame
+    public class GetParameters : DataFrame
     {
-        public GetParam() : base()
+        public GetParameters() : base()
         {
             Byte[] Data = new Byte[] { 0xFE, 0xC0, 0x04, 0x00, 0x21 };
             base.Generate(Data);
@@ -108,12 +108,16 @@ namespace DSO.ScopeControlFrames
             Byte[] Data = new Byte[] { 0xFE, 0xC0, 0x04, 0x00, 0x34 };
             base.Generate(Data);
         }
-        public ScopeReady(byte[] data) : base(data)
+        public ScopeReady(byte[] data) : base(data, 226, 79)
         {
             if (FrameID != 226 || FrameSubID != 79) //"O letter in ascii                                                O
             {
                 throw new InvalidDataFrameException("Wrong ScopeReady Data Frame");
             }
+        }
+        public DSO.Config.ScopeType ScopeType
+        {
+            get { return (DSO.Config.ScopeType)Data[5]; }
         }
     }
 
@@ -139,10 +143,11 @@ namespace DSO.ScopeControlFrames
         public SetState(Config.ScopeState state) : base()
         {
             BitArray array = new BitArray(8, false);
-            if((int)state == 0)
+            if ((int)state == 0)
             {
                 array[7] = false;
-            }else if((int)state == 1)
+            }
+            else if ((int)state == 1)
             {
                 array[7] = true;
             }
@@ -150,7 +155,7 @@ namespace DSO.ScopeControlFrames
             {
                 throw new InvalidDataFrameException("Wrong SetState DataFrame - invalid state");
             }
-            Byte[] Data = new Byte[] { 0xFE, 0xC0, 0x04, 0x00, 0x24, array.ToByte()};
+            Byte[] Data = new Byte[] { 0xFE, 0xC0, 0x04, 0x00, 0x24, array.ToByte() };
             base.Generate(Data);
         }
     }
@@ -167,12 +172,10 @@ namespace DSO.ScopeControlFrames
     {
         public GetScopeType() : base()
         {
-            Byte[] Data = new Byte[] { 0xFE, 0xE0, 0x04, 0x00, 0x00};
+            Byte[] Data = new Byte[] { 0xFE, 0xE0, 0x04, 0x00, 0x00 };
             base.Generate(Data);
         }
     }
-
-
 
     public class ExitUSBScopeMode : DataFrame
     {
@@ -192,7 +195,7 @@ namespace DSO.ScopeControlFrames
         }
         public USBScopeModeExited(byte[] data) : base(data)
         {
-            if (FrameID != 233 || FrameSubID != 00)                                         
+            if (FrameID != 233 || FrameSubID != 00)
             {
                 throw new InvalidDataFrameException("Wrong USBScopeModeExited Data Frame");
             }
@@ -211,7 +214,8 @@ namespace DSO.ScopeControlFrames
             {
                 array[6] = true;
                 array[7] = true;
-            }else if ((int) refV == 1)
+            }
+            else if ((int)refV == 1)
             {
                 array[6] = true;
                 array[7] = false;
@@ -226,3 +230,4 @@ namespace DSO.ScopeControlFrames
         }
     }
 }
+

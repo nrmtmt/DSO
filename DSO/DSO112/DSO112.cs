@@ -35,12 +35,9 @@ namespace DSO.DSO112
         {
             try
             {
-                if (WriteFrame(new ScopeControlFrames.GetConfig()))
-                {
-                    var conf = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), ref CurrentBuffer, ref timeoutTime);
-
+                    var conf = (CurrConfigDataFrame)GetAcknowledgedFrame.WriteAcknowledged
+                         (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);
                     return conf;
-                }
             }
             catch (TimeoutException)
             {

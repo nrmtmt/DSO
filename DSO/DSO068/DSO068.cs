@@ -34,19 +34,9 @@ namespace DSO.DSO068
    
         public override ICurrentConfig GetCurrentConfig() //seems to be same in each jye scope
         {
-            try
-            {
-                if (WriteFrame(new ScopeControlFrames.GetConfig()))
-                {
-                    var conf = (CurrConfigDataFrame)GetAcknowledgedFrame.Get(typeof(CurrConfigDataFrame), ref CurrentBuffer, ref timeoutTime);
-
-                    return conf;
-                }
-            }
-            catch (TimeoutException)
-            {
-            }
-            return GetCurrentConfig();
+            var conf = (CurrConfigDataFrame)GetAcknowledgedFrame.WriteAcknowledged
+                        (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);
+            return conf;
         }
 
       

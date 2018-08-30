@@ -51,6 +51,7 @@ namespace DSO
         {
             DSO068 = 4,
             DSO112A = 5,
+            Unspecified = 999,
         }
 
         public enum Coupling

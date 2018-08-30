@@ -1,57 +1,89 @@
 ﻿using DSO.DataFrames;
+using DSO.ScopeControlFrames;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace DSO.Utilities
 {
     public static class GetAcknowledgedFrame
     {
-        public static DataFrame Get(Type FrameType, ref byte[] buffer, ref int timeoutTime)
+        static byte[] WritedData;
+
+        public static DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope scope)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Restart();
-            while (stopwatch.ElapsedMilliseconds < timeoutTime)
+            while (stopwatch.ElapsedMilliseconds < scope.TimeoutTime)
             {
                 try
                 {
-                    if (FrameType == typeof(DataFrames.DSO068.CurrConfigDataFrame))
+                    if (SendType == typeof(GetParameters))
                     {
-                        DataFrames.DSO068.CurrConfigDataFrame CurrConfig = new DataFrames.DSO068.CurrConfigDataFrame(buffer);
-                        return CurrConfig;
+                        WriteFrame(new ScopeControlFrames.GetParameters(), scope.SerialPort);
                     }
-                    else if (FrameType == typeof(DataFrames.DSO112.CurrConfigDataFrame))
+                    else if(SendType == typeof(GetConfig))
                     {
-                        DataFrames.DSO112.CurrConfigDataFrame CurrParam = new DataFrames.DSO112.CurrConfigDataFrame(buffer);
-                        return CurrParam;
+                        WriteFrame(new ScopeControlFrames.GetConfig(), scope.SerialPort);
                     }
-                    else if (FrameType == typeof(CurrParamDataFrame))
+                    else if (SendType == typeof(EnterUSBScopeMode))
                     {
-                        CurrParamDataFrame CurrParam = new CurrParamDataFrame(buffer);
-                        return CurrParam;
+                        WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), scope.SerialPort);
                     }
-                    else if (FrameType == typeof(DataBlockDataFrame))
-                    {
-                        DataBlockDataFrame CurrData = new DataBlockDataFrame(buffer);
-                        return CurrData;
-                    }
-                    else if (FrameType == typeof(DataSampleDataFrame))
-                    {
-                        DataSampleDataFrame CurrData = new DataSampleDataFrame(buffer);
-                        return CurrData;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Wrong object type");
-                    }
+                    return ReturnFrame(ReturnType, scope.InstReadBuffer(), scope.TimeoutTime);
                 }
                 catch (InvalidDataFrameException ex)
                 {
-                    //do it again
-                }
 
-                throw new TimeoutException("Timeout while waiting for frame acknowledge");
+                }
             }
-            return null; 
+            throw new TimeoutException("Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString());
+        }
+
+
+        private static DataFrame ReturnFrame(Type FrameType, byte[] buffer, int timeoutTime)
+        {
+            if (FrameType == typeof(DataFrames.DSO068.CurrConfigDataFrame))
+            {
+                DataFrames.DSO068.CurrConfigDataFrame CurrConfig = new DataFrames.DSO068.CurrConfigDataFrame(buffer);
+                return CurrConfig;
+            }
+            else if (FrameType == typeof(DataFrames.DSO112.CurrConfigDataFrame))
+            {
+                DataFrames.DSO112.CurrConfigDataFrame CurrParam = new DataFrames.DSO112.CurrConfigDataFrame(buffer);
+                return CurrParam;
+            }
+            else if (FrameType == typeof(CurrParamDataFrame))
+            {
+                CurrParamDataFrame CurrParam = new CurrParamDataFrame(buffer);
+                return CurrParam;
+            }
+            else if (FrameType == typeof(DataBlockDataFrame))
+            {
+                DataBlockDataFrame CurrData = new DataBlockDataFrame(buffer);
+                return CurrData;
+            }
+            else if (FrameType == typeof(DataSampleDataFrame))
+            {
+                DataSampleDataFrame CurrData = new DataSampleDataFrame(buffer);
+                return CurrData;
+            }
+            else if (FrameType == typeof(ScopeControlFrames.ScopeReady))
+            {
+                ScopeControlFrames.ScopeReady ready = new ScopeControlFrames.ScopeReady(buffer);
+                return ready;
+            }
+            else
+            {
+                throw new InvalidOperationException("Wrong object type");
+            }
+        }
+
+        private static bool WriteFrame(DataFrame frame, IStreamResource port)
+        {
+            WritedData = frame.Data;
+            port.Write(frame.Data, 0, frame.Data.Count());
+            return true;
         }
     }
 }
