@@ -22,14 +22,14 @@ namespace DSO
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
-        protected int timeoutTime = 500; //time in with TimeoutException will be thrown
+        protected int timeoutTime = 100; //time in with TimeoutException will be thrown
         //back fields
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
         private bool _startCapture = false;
         protected Config.ScopeType _scopeType;
-        private int _readDelay = 30;
+        private int _readDelay = 10;
         private int _recordLength = 256;
         private int _timeBase = 3;
         private int _triggerPos = 50;
@@ -42,8 +42,12 @@ namespace DSO
 
         private bool _stopCapture = false;
 
-        public List<byte> LongBuffer = new List<byte>();
+        public Queue<byte> DataBuffer = new Queue<byte>();
+        public Queue<byte> ShortQueue = new Queue<byte>();
+
+        protected byte[] PreviousBuffer = null;
         protected byte[] CurrentBuffer = null;
+        protected byte[] InstBuffer = null;
 
         public IStreamResource SerialPort
         {
@@ -93,12 +97,11 @@ namespace DSO
             //populate buffer
             Info(sender, null);
             CurrentBuffer = ((byte[])sender);
-            LongBuffer.AddRange(CurrentBuffer);
-
-            if (LongBuffer.Count() > 1.2 * _recordLength)
+            DataBuffer.Concat(ShortQueue);
+            if (DataBuffer.Count() > _recordLength)
             {
-                GenerateFrame(LongBuffer.ToArray());
-                LongBuffer.Clear(); ;
+                GenerateFrame(DataBuffer.ToArray());
+                DataBuffer.Clear(); ;
             }
         }
 
@@ -206,7 +209,12 @@ namespace DSO
             SerialPort.DiscardInBuffer();
             while (!_stopCapture)
             {
+                    
                 byte[] buffer = InstReadBuffer();
+                foreach(byte val in buffer)
+                {
+                    ShortQueue.Enqueue(val);
+                }
                 Port_DataReceivedEvent(buffer, null);
                 Thread.Sleep(_readDelay);
             }
@@ -214,7 +222,7 @@ namespace DSO
         }
 
         public byte[] InstReadBuffer()
-        {
+        {   
             int bufferSize = SerialPort.BytesToRead;
             byte[] buffer = new byte[bufferSize];
             SerialPort.Read(buffer, 0, bufferSize);
@@ -228,7 +236,7 @@ namespace DSO
 
         protected byte[] GetLongBuffer()
         {
-            return LongBuffer.ToArray();
+            return DataBuffer.ToArray();
         }
 
         //Interface implementation

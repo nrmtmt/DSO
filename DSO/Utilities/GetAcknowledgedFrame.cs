@@ -10,6 +10,7 @@ namespace DSO.Utilities
     {
         byte[] WritedData;
         string lastEx;
+        string stringData;
 
         public DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope scope)
         {
@@ -38,6 +39,12 @@ namespace DSO.Utilities
                     lastEx = ex.Message;
                 }
             }
+            stringData = "";
+            foreach (var data in scope.Buffer)
+            {
+                stringData += data + ",";
+            }
+            stringData.Remove(stringData.Length - 2);
             throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
         }
 
