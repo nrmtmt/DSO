@@ -29,7 +29,7 @@ namespace DSO.Tests
         [TestMethod()]
         public void DataFrameTest2()
         {
-            Assert.Fail();
+            CurrParamDataFrame config = new CurrParamDataFrame(Data);
         }
 
         [TestMethod()]
