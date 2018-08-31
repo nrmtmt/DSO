@@ -8,6 +8,7 @@ namespace DSO
 {
     public abstract class DataFrame
     {
+      
         private static int ByteSearch(byte[] searchIn, byte[] searchBytes, int start = 0)
         {
             int found = -1;

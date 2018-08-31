@@ -14,7 +14,7 @@ namespace DSO.DataFrames.DSO068
         {
             if (FrameID != 192 || FrameSubID != 48 || data.Length < 55)
             {
-                throw new InvalidDataFrameException("Wrong CurrConfigDataFrame - invalid FrameID or data length");
+                throw new InvalidDataFrameException($"Wrong CurrConfigDataFrame - invalid FrameID or data length : FrameID {FrameID}, Frame subID {FrameSubID}, DataLength {data.Length} ");
             }
         }
 

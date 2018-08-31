@@ -153,7 +153,7 @@ namespace DSO
 
         public CurrParamDataFrame GetCurrentParameters()
         {
-            var param = (CurrParamDataFrame)GetAcknowledgedFrame.WriteAcknowledged
+            var param = (CurrParamDataFrame)new GetAcknowledgedFrame().WriteAcknowledged
                (typeof(ScopeControlFrames.GetParameters), typeof(CurrParamDataFrame), this);
                 _recordLength = param.RecordLength;
                 _timeBase = (int)param.TBase;
@@ -238,7 +238,7 @@ namespace DSO
             BackgroundReader.IsBackground = true;
             BackgroundReader.Start();
           
-                var Ready = (ScopeControlFrames.ScopeReady)GetAcknowledgedFrame.WriteAcknowledged
+                var Ready = (ScopeControlFrames.ScopeReady)new GetAcknowledgedFrame().WriteAcknowledged
                             (typeof(ScopeControlFrames.EnterUSBScopeMode), typeof(ScopeControlFrames.ScopeReady), this);
 
                     GetCurrentConfig();

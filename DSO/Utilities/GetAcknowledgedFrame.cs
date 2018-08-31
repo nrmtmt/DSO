@@ -6,11 +6,12 @@ using System.Linq;
 
 namespace DSO.Utilities
 {
-    public static class GetAcknowledgedFrame
+    public class GetAcknowledgedFrame
     {
-        static byte[] WritedData;
+        byte[] WritedData;
+        string lastEx;
 
-        public static DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope scope)
+        public DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope scope)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Restart();
@@ -30,18 +31,18 @@ namespace DSO.Utilities
                     {
                         WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, scope.InstReadBuffer(), scope.TimeoutTime);
+                    return ReturnFrame(ReturnType, scope.Buffer, scope.TimeoutTime);
                 }
                 catch (InvalidDataFrameException ex)
                 {
-
+                    lastEx = ex.Message;
                 }
             }
-            throw new TimeoutException("Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString());
+            throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
         }
 
 
-        private static DataFrame ReturnFrame(Type FrameType, byte[] buffer, int timeoutTime)
+        private DataFrame ReturnFrame(Type FrameType, byte[] buffer, int timeoutTime)
         {
             if (FrameType == typeof(DataFrames.DSO068.CurrConfigDataFrame))
             {
@@ -79,7 +80,7 @@ namespace DSO.Utilities
             }
         }
 
-        private static bool WriteFrame(DataFrame frame, IStreamResource port)
+        private bool WriteFrame(DataFrame frame, IStreamResource port)
         {
             WritedData = frame.Data;
             port.Write(frame.Data, 0, frame.Data.Count());
