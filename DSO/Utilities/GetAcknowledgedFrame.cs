@@ -37,6 +37,7 @@ namespace DSO.Utilities
                 catch (InvalidDataFrameException ex)
                 {
                     lastEx = ex.Message;
+                    System.Threading.Thread.Sleep(10);
                 }
             }
             stringData = "";
@@ -44,7 +45,7 @@ namespace DSO.Utilities
             {
                 stringData += data + ",";
             }
-            stringData.Remove(stringData.Length - 2);
+            stringData.Remove(stringData.Length - 1);
             throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
         }
 

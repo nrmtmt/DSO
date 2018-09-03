@@ -72,7 +72,7 @@ namespace DSO
             {
                 for (int i = 0; i < data.Count(); i++)
                 {
-                    if (data[i] == frameSubID && i > 3)
+                    if (data[i] == frameSubID && data[i-3] == frameID &  i > 3)
                     {
                         var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
 

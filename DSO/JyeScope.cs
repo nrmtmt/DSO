@@ -29,7 +29,7 @@ namespace DSO
         private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
         private bool _startCapture = false;
         protected Config.ScopeType _scopeType;
-        private int _readDelay = 10;
+        private int _readDelay = 5;
         private int _recordLength = 256;
         private int _timeBase = 3;
         private int _triggerPos = 50;
@@ -42,8 +42,7 @@ namespace DSO
 
         private bool _stopCapture = false;
 
-        public Queue<byte> DataBuffer = new Queue<byte>();
-        public Queue<byte> ShortQueue = new Queue<byte>();
+        private Queue<byte> DataBuffer = new Queue<byte>();
 
         protected byte[] PreviousBuffer = null;
         protected byte[] CurrentBuffer = null;
@@ -97,7 +96,12 @@ namespace DSO
             //populate buffer
             Info(sender, null);
             CurrentBuffer = ((byte[])sender);
-            DataBuffer.Concat(ShortQueue);
+          
+            foreach(byte data in CurrentBuffer)
+            {
+                DataBuffer.Enqueue(data);
+            }
+
             if (DataBuffer.Count() > _recordLength)
             {
                 GenerateFrame(DataBuffer.ToArray());
@@ -209,13 +213,14 @@ namespace DSO
             SerialPort.DiscardInBuffer();
             while (!_stopCapture)
             {
-                    
-                byte[] buffer = InstReadBuffer();
-                foreach(byte val in buffer)
+                int bufferSize = SerialPort.BytesToRead;
+                byte[] buffer = new byte[bufferSize];
+                if(bufferSize > 5)
                 {
-                    ShortQueue.Enqueue(val);
+                    SerialPort.Read(buffer, 0, bufferSize);
+                    CurrentBuffer = buffer;
+                    Port_DataReceivedEvent(buffer, null);
                 }
-                Port_DataReceivedEvent(buffer, null);
                 Thread.Sleep(_readDelay);
             }
             CurrentBuffer = null;
@@ -249,8 +254,8 @@ namespace DSO
                 var Ready = (ScopeControlFrames.ScopeReady)new GetAcknowledgedFrame().WriteAcknowledged
                             (typeof(ScopeControlFrames.EnterUSBScopeMode), typeof(ScopeControlFrames.ScopeReady), this);
 
-                    GetCurrentConfig();
-                    GetCurrentParameters();
+                     GetCurrentConfig();
+                     GetCurrentParameters();
                     _scopeType = Ready.ScopeType;
                 return true;
 
