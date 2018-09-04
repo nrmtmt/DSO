@@ -8,9 +8,7 @@ namespace DSO.Utilities
 {
     public class GetAcknowledgedFrame
     {
-        byte[] WritedData;
         string lastEx;
-        string stringData;
 
         public DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope scope)
         {
@@ -32,21 +30,32 @@ namespace DSO.Utilities
                     {
                         WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, scope.Buffer, scope.TimeoutTime);
+                    return ReturnFrame(ReturnType, scope.ShortBuffer, scope.TimeoutTime);
                 }
                 catch (InvalidDataFrameException ex)
                 {
-                    lastEx = ex.Message;
-                    System.Threading.Thread.Sleep(10);
+                    try
+                    {
+                        return ReturnFrame(ReturnType, scope.LongBuffer, scope.TimeoutTime);
+                    }
+                    catch (InvalidDataFrameException ex2)
+                    {
+                         lastEx = ex.Message;
+                    } 
                 }
             }
-            stringData = "";
-            foreach (var data in scope.Buffer)
-            {
-                stringData += data + ",";
-            }
-            stringData.Remove(stringData.Length - 1);
-            throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
+            return null;
+           // return ReturnFrame(ReturnType, scope.ShortBuffer, scope.TimeoutTime);
+
+
+
+            //stringData = "";
+            //foreach (var data in scope.ShortBuffer)
+            //{
+            //    stringData += data + ",";
+            //}
+            //stringData.Remove(stringData.Length - 1);
+            //throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
         }
 
 
@@ -90,8 +99,8 @@ namespace DSO.Utilities
 
         private bool WriteFrame(DataFrame frame, IStreamResource port)
         {
-            WritedData = frame.Data;
             port.Write(frame.Data, 0, frame.Data.Count());
+            System.Threading.Thread.Sleep(10);
             return true;
         }
     }

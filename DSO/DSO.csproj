@@ -52,7 +52,6 @@
     <Compile Include="FindFrameInStream.cs" />
     <Compile Include="Interfaces\ICurrentConfig.cs" />
     <Compile Include="JyeScope.cs" />
-    <Compile Include="Class1.cs" />
     <Compile Include="DataFrames\DataFrame.cs" />
     <Compile Include="Interfaces\IScope.cs" />
     <Compile Include="Interfaces\IStreamResource.cs" />

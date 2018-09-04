@@ -72,28 +72,36 @@ namespace DSO
             {
                 for (int i = 0; i < data.Count(); i++)
                 {
-                    if (data[i] == frameSubID && data[i-3] == frameID &  i > 3)
+                    try
                     {
-                        var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
-
-                        if (frameSize > 3 && frameSize < 1096) //to avoid blank or corrupted frames //need to change to something more sophisticated
+                        if (data[i] == frameSubID && data[i - 3] == frameID & i > 3)
                         {
-                            byte[] frame = new byte[frameSize + 1];
-                            for (int z = 0; z <= frameSize; z++)
+                            var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
+
+                            if (frameSize > 3 && frameSize < 1096) //to avoid blank or corrupted frames //need to change to something more sophisticated
                             {
-                                try
+                                byte[] frame = new byte[frameSize + 1];
+                                for (int z = 0; z <= frameSize; z++)
                                 {
-                                    frame[z] = data[i - 4 + z];
+                                    try
+                                    {
+                                        frame[z] = data[i - 4 + z];
+                                    }
+                                    catch (IndexOutOfRangeException ex)
+                                    {
+                                        frame[z] = SyncChar; //sometimes sync char is missing
+                                    }
                                 }
-                                catch (IndexOutOfRangeException ex)
-                                {
-                                    frame[z] = SyncChar; //sometimes sync char is missing
-                                }
+                                Generate(frame);
                             }
-                            Generate(frame);
+                            break;
                         }
-                        break;
                     }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                   
                 }
 
             }
