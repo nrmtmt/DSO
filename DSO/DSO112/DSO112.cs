@@ -1,4 +1,4 @@
-﻿using DSO.DataFrames.DSO068;
+﻿using DSO.DataFrames.DSO112;
 using DSO.Interfaces;
 using DSO.Utilities;
 using System;
@@ -7,15 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO.DSO068
+namespace DSO.DSO112
 {
-    public class DSO068 : JyeScope
+    class DSO112 :JyeScope
     {
         private Dictionary<int, string> _AvailableRecordLength = new Dictionary<int, string>();
-        private Dictionary<int, string> _AvailableSensitivitySettings  = new Dictionary<int, string>();
-        private Dictionary<int, string> _AvailableTimeBaseSettings  = new Dictionary<int, string>();
+        private Dictionary<int, string> _AvailableSensitivitySettings = new Dictionary<int, string>();
+        private Dictionary<int, string> _AvailableTimeBaseSettings = new Dictionary<int, string>();
 
-        public DSO068(SerialPortAdapter port) : base(port)
+        public DSO112(SerialPortAdapter port) : base(port)
         {
             foreach (var value in DSO.Config.RecLength)
             {
@@ -31,15 +31,19 @@ namespace DSO.DSO068
             }
 
         }
-   
         public override ICurrentConfig GetCurrentConfig() //seems to be same in each jye scope
         {
-            var conf = (CurrConfigDataFrame)new GetAcknowledgedFrame().WriteAcknowledged
-                        (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);
-            return conf;
+            try
+            {
+                    var conf = (CurrConfigDataFrame)new GetAcknowledgedFrame().WriteAcknowledged
+                         (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);
+                    return conf;
+            }
+            catch (TimeoutException)
+            {
+            }
+            return GetCurrentConfig();
         }
-
-      
 
         public override Dictionary<int, string> AvailableRecordLength
         {

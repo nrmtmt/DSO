@@ -1,13 +1,14 @@
-﻿using System;
+﻿using DSO.Interfaces;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO
+namespace DSO.DataFrames.DSO112
 {
-    public class CurrConfigDataFrame : DataFrame
+    public class CurrConfigDataFrame : DataFrame, ICurrentConfig
     {
         public CurrConfigDataFrame(byte[] data) : base(data, 192, 48) //readonly
         {
@@ -21,67 +22,63 @@ namespace DSO
         {
             get
             {
-                BitArray bit = new BitArray(BitConverter.GetBytes(Data[5]).ToArray());
-                return bit[0];
+                return true;
             }
         }
         public bool Ch2Present
         {
             get
             {
-                BitArray bit = new BitArray(BitConverter.GetBytes(Data[5]).ToArray());
-                return bit[1];
+                return false;
             }
         }
         public bool SensitivityChangeableByHost
         {
             get
             {
-                BitArray bit = new BitArray(BitConverter.GetBytes(Data[6]).ToArray());
-                return bit[0];
+                return true;
             }
         }
         public bool CoupleChangeableByHost
         {
             get
             {
-                BitArray bit = new BitArray(BitConverter.GetBytes(Data[6]).ToArray());
-                return bit[1];
+                return true;
             }
         }
         public Config.VerticalSensitivity MaxVerticalSensitivity
         {
             get
             {
-                return (Config.VerticalSensitivity)Data[9];
+                return (Config.VerticalSensitivity)Data[5];
             }
         }
         public Config.VerticalSensitivity MinVerticalSensitivity
         {
             get
             {
-                return (Config.VerticalSensitivity)Data[10];
+                return (Config.VerticalSensitivity)Data[6];
             }
         }
-        public Config.Coupling MaxCoupleSetting //?
+        public Config.Coupling MaxCoupleSetting
         {
             get
             {
-                return (Config.Coupling)Data[11];
+                return (Config.Coupling)Data[7];
             }
         }
-        public Config.Coupling MinCoupleSetting //?
+        public Config.Coupling MinCoupleSetting
         {
             get
             {
-                return (Config.Coupling)Data[12];
+                return (Config.Coupling)Data[8];
             }
         }
         public int MaxVerticalPosition
         {
             get
             {
-                byte[] bytes = { Data[13], Data[14] };
+                byte[] bytes = { Data[9], Data[10] };
                 return bytes.ToInt();
             }
         }
@@ -89,7 +86,7 @@ namespace DSO
         {
             get
             {
-                byte[] bytes = { Data[15], Data[16] };
+                byte[] bytes = { Data[11], Data[12] };
                 return bytes.ToInt();
             }
         }
@@ -97,49 +94,49 @@ namespace DSO
         {
             get
             {
-                return (Config.Timebase)Data[25];
+                return (Config.Timebase)Data[21];
             }
         }
         public Config.Timebase MinTimebaseSetting
         {
             get
             {
-                return (Config.Timebase)Data[26];
+                return (Config.Timebase)Data[22];
             }
         }
         public Config.TriggerMode MaxTriggerModeSetting
         {
             get
             {
-                return (Config.TriggerMode)Data[31];
+                return (Config.TriggerMode)Data[27];
             }
         }
         public Config.TriggerMode MinTriggerModeSetting
         {
             get
             {
-                return (Config.TriggerMode)Data[32];
+                return (Config.TriggerMode)Data[28];
             }
         }
         public Config.Slope MaxSlopeModeSetting
         {
             get
             {
-                return (Config.Slope)Data[33];
+                return (Config.Slope)Data[29];
             }
         }
         public Config.Slope MinSlopeModeSetting
         {
             get
             {
-                return (Config.Slope)Data[34];
+                return (Config.Slope)Data[30];
             }
         }
         public int MaxTriggerLevel
         {
             get
             {
-                byte[] bytes = { Data[35], Data[36] };
+                byte[] bytes = { Data[31], Data[32] };
                 return bytes.ToInt();
             }
         }
@@ -147,7 +144,7 @@ namespace DSO
         {
             get
             {
-                byte[] bytes = { Data[37], Data[38] };
+                byte[] bytes = { Data[33], Data[34] };
                 return bytes.ToInt();
             }
         }
@@ -155,21 +152,21 @@ namespace DSO
         {
             get
             {
-                return Data[39];
+                return Data[35];
             }
         }
         public int MinTriggerPosition
         {
             get
             {
-                return Data[40];
+                return Data[36];
             }
         }
         public int MaxRecordLength
         {
             get
             {
-                byte[] bytes = { Data[47], Data[48], Data[49], Data[50] };
+                byte[] bytes = { Data[43], Data[44], Data[45], Data[46] };
                 return bytes.ToInt();
             }
         }
@@ -177,7 +174,7 @@ namespace DSO
         {
             get
             {
-                byte[] bytes = { Data[51], Data[52], Data[53], Data[54] };
+                byte[] bytes = { Data[47], Data[48], Data[49], Data[50] };
                 return bytes.ToInt();
             }
         }

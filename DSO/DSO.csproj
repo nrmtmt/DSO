@@ -40,20 +40,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataFrames\CurrConfigDataFrame.cs" />
+    <Compile Include="DataFrames\DSO068\CurrConfigDataFrame.cs" />
     <Compile Include="DataFrames\CurrParamDataFrame.cs" />
     <Compile Include="DataFrames\DataBlockDataFrame.cs" />
     <Compile Include="DataFrames\DataSampleDataFrame.cs" />
-    <Compile Include="DataFrames\SpecialCommandDataFrame.cs" />
+    <Compile Include="DataFrames\DSO068\SpecialCommandDataFrame.cs" />
+    <Compile Include="DataFrames\DSO112\CurrConfigDataFrame.cs" />
+    <Compile Include="DataFrames\DSO112\SpecialCommandDataFrame.cs" />
     <Compile Include="DSO068\DSO068.cs" />
+    <Compile Include="DSO112\DSO112.cs" />
     <Compile Include="FindFrameInStream.cs" />
+    <Compile Include="Interfaces\ICurrentConfig.cs" />
     <Compile Include="JyeScope.cs" />
-    <Compile Include="Class1.cs" />
     <Compile Include="DataFrames\DataFrame.cs" />
     <Compile Include="Interfaces\IScope.cs" />
     <Compile Include="Interfaces\IStreamResource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScopeControlFrames\GetParam.cs" />
+    <Compile Include="ScopeControlFrames\ScopeControl.cs" />
+    <Compile Include="Utilities\GetAcknowledgedFrame.cs" />
     <Compile Include="Utilities\SerialPortAdapter.cs" />
     <Compile Include="Utilities\Util.cs" />
   </ItemGroup>

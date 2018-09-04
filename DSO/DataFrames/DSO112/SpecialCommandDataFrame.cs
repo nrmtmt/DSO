@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO
+namespace DSO.DataFrames.DSO112
 {
-    public class Class1
+    class SpecialCommandDataFrame:DataFrame
     {
     }
 }

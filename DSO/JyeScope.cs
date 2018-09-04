@@ -6,26 +6,75 @@ using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Threading;
 using System.Timers;
+using System.Diagnostics;
+using DSO.Utilities;
+using DSO.DataFrames;
+using DSO.Interfaces;
+using DSO.DataFrames.DSO068;
 
 namespace DSO
 {
     public abstract class JyeScope : IScope
     {
+        //interface event
         public event System.EventHandler NewDataInBuffer = delegate { };
+        //info event (for debug)
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
-        private System.Timers.Timer ReadTimer;
-        private int _readDelay = 30;
-        private int _recordLength = 1024;
-        private bool _stopCapture = false;
+        protected int timeoutTime = 500; //time in with TimeoutException will be thrown
+        //back fields
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
- 
+        private bool _startCapture = false;
+        protected Config.ScopeType _scopeType;
+        private int _readDelay = 50;
+        private int _recordLength = 512;
+        private int _timeBase = 7;
+        private int _triggerPos = 50;
+        private int _triggerLevel = 100;
+        private int _sensitivity = 7;
+        private int _triggerMode = 0;
+        private int _couple = 1;
+        private int _triggerSlope = 1;
+        private int _verticalPosition = 0;
 
-        private List<byte> LongBuffer = new List<byte>();
-        private byte[] CurrentBuffer = null;
+        private bool _stopCapture = false;
+
+        private Queue<byte> _DataBuffer = new Queue<byte>();
+        protected Queue<byte> _CurrentBuffer = new Queue<byte>();
+
+        public IStreamResource SerialPort
+        {
+            get;
+            private set;
+        }
+        public byte[] ShortBuffer
+        {
+          get
+            {
+                return _CurrentBuffer.ToArray(); ;
+            }
+        }
+        public byte[] LongBuffer
+        {
+            get
+            {
+                return _DataBuffer.ToArray(); ;
+            }
+        }
+        public int TimeoutTime
+        {
+            get
+            {
+                return timeoutTime;
+            }
+            set
+            {
+                timeoutTime = value;
+            }
+        }
 
         public JyeScope(IStreamResource port)
         {
@@ -38,7 +87,7 @@ namespace DSO
             }
             foreach (var mode in (int[])Enum.GetValues(typeof(DSO.Config.TriggerMode)))
             {
-              _AvailableTriggerModeSettings.Add(mode, Enum.GetName(typeof(DSO.Config.TriggerMode), mode));
+                _AvailableTriggerModeSettings.Add(mode, Enum.GetName(typeof(DSO.Config.TriggerMode), mode));
             }
             foreach (var slope in (int[])Enum.GetValues(typeof(DSO.Config.Slope)))
             {
@@ -48,20 +97,27 @@ namespace DSO
 
         private void Port_DataReceivedEvent(object sender, EventArgs e)
         {
-            //populate buffer
-            Info(sender, null);
-            CurrentBuffer = ((byte[]) sender);
-            LongBuffer.AddRange(CurrentBuffer);
-  
-            if (LongBuffer.Count() > _recordLength)
+            Info(_CurrentBuffer.ToArray(), null);
+            foreach (byte data in _CurrentBuffer)
             {
-                GenerateFrame(LongBuffer.ToArray());
-                LongBuffer.Clear(); ;
+                _DataBuffer.Enqueue(data);
             }
+
+            if (_DataBuffer.Count() > _recordLength * 2)
+            {
+                GenerateFrame(_DataBuffer.ToArray());
+               
+                foreach (byte data in _CurrentBuffer)
+                {
+                    _DataBuffer.Dequeue();
+                }
+            }
+          
         }
 
         private void GenerateFrame(byte[] data)
         {
+          
             try
             {
                 var DataFrame = new DataBlockDataFrame(data);
@@ -72,7 +128,10 @@ namespace DSO
                     {
                         rawData[i - 5] = DataFrame.Data[i];
                     }
-                    NewDataInBuffer(rawData, null);
+                    if(rawData.Count() == _recordLength -5)
+                    {
+                        NewDataInBuffer(rawData, null);
+                    }
                 }
             }
             catch (InvalidDataFrameException ex)
@@ -87,6 +146,7 @@ namespace DSO
                         {
                             rawData[i - 5] = DataFrame.Data[i];
                         }
+                      
                         NewDataInBuffer(rawData, null);
                     }
                 }
@@ -95,6 +155,131 @@ namespace DSO
 
                 }
             }
+            _GetCurrentParameters();
+        }
+
+        protected bool WriteFrame(DataFrame frame)
+        {
+            SerialPort.Write(frame.Data, 0, frame.Data.Count());
+            return true;
+        }
+        public abstract ICurrentConfig GetCurrentConfig();
+
+        private void _GetCurrentParameters()
+        {
+            var param = (CurrParamDataFrame)new GetAcknowledgedFrame().WriteAcknowledged
+               (typeof(ScopeControlFrames.GetParameters), typeof(CurrParamDataFrame), this);
+            if(param != null)
+            {
+                _recordLength = param.RecordLength;
+                _timeBase = (int)param.TBase;
+                _triggerPos = param.TriggerPosition;
+                _triggerLevel = param.TriggerLevel;
+                _sensitivity = (int)param.VSensitivity;
+                _triggerMode = (int)param.TriggerMode;
+                _couple = (int)param.Couple;
+                _triggerSlope = (int)param.TriggerSlope;
+                _verticalPosition = (int)param.VPosition;
+            }
+           
+        }
+
+        public CurrParamDataFrame GetCurrentParameters()
+        {
+            var paramx = new CurrParamDataFrame((Config.VerticalSensitivity)_sensitivity, (Config.Timebase)_timeBase, (Config.Slope)_triggerSlope, (Config.TriggerMode)_triggerMode, (Config.Coupling)_couple, _triggerLevel, (byte)_triggerPos, _recordLength, _verticalPosition);
+            return paramx;
+        }
+
+        private bool SetConfig()
+        {
+            return true;
+        }
+
+        private bool SetCurrentParameters()
+        {
+            var stopwatch = Stopwatch.StartNew();
+            while (stopwatch.ElapsedMilliseconds < timeoutTime) 
+            {
+                var curParam = new CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
+                                                             (DSO.Config.Timebase)_timeBase,
+                                                             (DSO.Config.Slope)_triggerSlope,
+                                                             (DSO.Config.TriggerMode)_triggerMode, 
+                                                             (DSO.Config.Coupling)_couple,
+                                                             (byte)_triggerLevel, 
+                                                             (byte)_triggerPos, 
+                                                             DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)], 
+                                                             _verticalPosition);
+                WriteFrame(curParam);
+                //Thread.Sleep(timeoutTime);
+                var curParam2 = GetCurrentParameters();
+                if (!curParam.Equals(curParam2))
+                {
+                    //do it again
+                }else
+                {
+                    return true;
+                }
+            }
+           //return SetCurrentParameters();
+           throw new TimeoutException("Timeout while waiting for acknowledge");
+        }
+
+        private void ReadBuffer()
+        {
+            SerialPort.DiscardInBuffer();
+            while (!_stopCapture)
+            {
+                int bufferSize = SerialPort.BytesToRead;
+                byte[] buffer = new byte[bufferSize];
+                if(bufferSize > 5)
+                {
+                    _CurrentBuffer.Clear();
+                    SerialPort.Read(buffer, 0, bufferSize);
+                    foreach(var item in buffer)
+                    {
+                        _CurrentBuffer.Enqueue(item);
+                    }
+                    Port_DataReceivedEvent(buffer, null);
+                }
+                Thread.Sleep(_readDelay);
+            }
+           _CurrentBuffer = null;
+        }
+
+        public byte[] InstReadBuffer()
+        {   
+            int bufferSize = SerialPort.BytesToRead;
+            byte[] buffer = new byte[bufferSize];
+            SerialPort.Read(buffer, 0, bufferSize);
+            return buffer;
+        }
+
+        protected byte[] GetBuffer()
+        {
+            return _CurrentBuffer.ToArray();
+        }
+
+        //Interface implementation
+        public bool Connect()
+        {
+            Thread BackgroundReader = new Thread(ReadBuffer);
+            BackgroundReader.IsBackground = true;
+            BackgroundReader.Start();
+          
+                var Ready = (ScopeControlFrames.ScopeReady)new GetAcknowledgedFrame().WriteAcknowledged
+                            (typeof(ScopeControlFrames.EnterUSBScopeMode), typeof(ScopeControlFrames.ScopeReady), this);
+
+                     GetCurrentConfig();
+                     _GetCurrentParameters();
+                    _scopeType = Ready.ScopeType;
+                return true;
+        }
+
+        public bool Disconnect()
+        {
+            WriteFrame(new ScopeControlFrames.ExitUSBScopeMode());
+            _stopCapture = true;
+            return true;
         }
 
         public IScope Create()
@@ -107,21 +292,33 @@ namespace DSO
             SerialPort.Dispose();
             return true;
         }
-        
-        public IStreamResource SerialPort
+
+        public bool StartCapture()
         {
-            get;
-            private set;
+            return true;
+        }
+
+        public bool StopCapture()
+        {
+            while(_CurrentBuffer!= null)
+            {
+                _stopCapture = true;
+            }
+            return true;
+        }
+
+        public long[] GetScaledData()
+        {
+            throw new NotImplementedException();
         }
 
         public abstract Dictionary<int, string> AvailableTimebaseSettings { get; }
-    
 
         public Dictionary<int, string> AvailableCoupleSettings
         {
             get
             {
-                throw new NotImplementedException();
+                return _AvailableCoupleSettings;
             }
         }
 
@@ -129,18 +326,17 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _AvailableTriggerSlopeSettings;
             }
         }
 
         public abstract Dictionary<int, string> AvailableSenitivitySettings { get; }
-     
 
         public Dictionary<int, string> AvailableTriggerModeSettings
         {
             get
             {
-                throw new NotImplementedException();
+                return _AvailableTriggerModeSettings;
             }
         }
 
@@ -148,12 +344,13 @@ namespace DSO
         {
             get
             {
-               return _readDelay;
+                return _readDelay;
             }
 
             set
             {
                 _readDelay = value;
+                SetCurrentParameters();
             }
         }
 
@@ -161,12 +358,13 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _timeBase;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _timeBase = value;
+                SetCurrentParameters();
             }
         }
 
@@ -174,12 +372,13 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _triggerPos;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _triggerPos = value;
+                SetCurrentParameters();
             }
         }
 
@@ -187,12 +386,13 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _triggerLevel;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _triggerLevel = value;
+                SetCurrentParameters();
             }
         }
 
@@ -200,12 +400,13 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _sensitivity;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _sensitivity = value;
+                SetCurrentParameters();
             }
         }
 
@@ -213,12 +414,13 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _triggerMode;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _triggerMode = value;
+                SetCurrentParameters();
             }
         }
 
@@ -226,12 +428,13 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _couple;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _couple = value;
+                SetCurrentParameters();
             }
         }
 
@@ -239,12 +442,13 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _triggerSlope;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _triggerSlope = value;
+                SetCurrentParameters();
             }
         }
 
@@ -254,123 +458,14 @@ namespace DSO
         {
             get
             {
-                throw new NotImplementedException();
+                return _recordLength;
             }
 
             set
             {
-                throw new NotImplementedException();
+                _recordLength = value;
+                SetCurrentParameters();
             }
-        }
-
-        public bool Connect()
-        {
-            //ReadTimer = new System.Timers.Timer();
-            //ReadTimer.Elapsed += new System.Timers.ElapsedEventHandler(ReadBuffer);
-            //ReadTimer.Interval = _readDelay;
-            //ReadTimer.Start();
-            Thread BackgroundReader = new Thread(ReadBuffer);
-            BackgroundReader.IsBackground = true;
-            BackgroundReader.Start();
-
-            WriteFrame(new ScopeControlFrames.EnterUSBScopeMode());
-            
-            if (ScopeReady())
-            {
-                return true;
-            }else
-            {
-                return false;
-            }
-        }
-
-        public bool Disconnect()
-        {
-            WriteFrame(new ScopeControlFrames.ExitUSBScopeMode());
-            _stopCapture = true;
-            return true;
-        }
-
-        protected bool WriteFrame(DataFrame frame)
-        {
-            SerialPort.Write(frame.Data, 0, frame.Data.Count());
-            return true;
-        }
-
-
-        public CurrConfigDataFrame GetCurrentConfig() //seems to be same in each jye scope
-        {
-
-            if (WriteFrame(new ScopeControlFrames.GetConfig()))
-            {
-                try
-                {
-                    CurrConfigDataFrame CurrConfig = new CurrConfigDataFrame(CurrentBuffer);
-                    return CurrConfig;
-                }
-                catch (InvalidDataFrameException ex)
-                {
-                }
-            }
-            return null;
-        }
-           
-
-        public bool ScopeReady() //seems to be same in each jye scope
-        {
-            try
-            {
-                if (new ScopeControlFrames.ScopeReady(CurrentBuffer) != null)
-                {
-                    return true;
-                }
-            }
-            catch (InvalidDataFrameException ex)
-            {
-            }
-            return false;
-        }
-
-
-        public abstract CurrParamDataFrame GetCurrentParameters();
-        public abstract CurrParamDataFrame SetCurrentParameters();
-        public abstract DataFrame GetData();
-
-        public bool StartCapture()
-        {
-            _stopCapture = false;
-            return true;
-        }
-       
-        private void ReadBuffer()
-        {
-            while(!_stopCapture)
-                {
-                int bufferSize = SerialPort.BytesToRead;
-                byte[] buffer = new byte[bufferSize];
-                SerialPort.Read(buffer, 0, bufferSize);
-                Port_DataReceivedEvent(buffer, null);
-                Thread.Sleep(_readDelay);
-            }
-               
-        }
-        public byte[] GetBuffer()
-        {
-            return CurrentBuffer;
-        }
-        public byte[] GetLongBuffer()
-        {
-            return LongBuffer.ToArray();
-        }
-
-        public bool StopCapture()
-        {
-            throw new NotImplementedException();
-        }
-
-        public long[] GetScaledData()
-        {
-            throw new NotImplementedException();
         }
     }
 }

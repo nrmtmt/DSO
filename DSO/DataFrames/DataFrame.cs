@@ -8,6 +8,7 @@ namespace DSO
 {
     public abstract class DataFrame
     {
+      
         private static int ByteSearch(byte[] searchIn, byte[] searchBytes, int start = 0)
         {
             int found = -1;
@@ -55,6 +56,7 @@ namespace DSO
             return found;
         }
         private static readonly byte SyncChar = 254;
+
         public DataFrame()
         {
            
@@ -70,66 +72,93 @@ namespace DSO
             {
                 for (int i = 0; i < data.Count(); i++)
                 {
-                    if (data[i] == frameSubID && i > 3)
+                    try
                     {
-                        var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
-
-                        if (frameSize > 3 ) //to avoid blank or corrupted frames //need to change to something more sophisticated
+                        if (data[i] == frameSubID && data[i - 3] == frameID & i > 3)
                         {
-                            byte[] frame = new byte[frameSize + 1];
-                            for (int z = 0; z <= frameSize; z++)
+                            var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
+
+                            if (frameSize > 3 && frameSize < 1096) //to avoid blank or corrupted frames //need to change to something more sophisticated
                             {
-                                try
+                                byte[] frame = new byte[frameSize + 1];
+                                for (int z = 0; z <= frameSize; z++)
                                 {
-                                    frame[z] = data[i - 4 + z];
+                                    try
+                                    {
+                                        frame[z] = data[i - 4 + z];
+                                    }
+                                    catch (IndexOutOfRangeException ex)
+                                    {
+                                        frame[z] = SyncChar; //sometimes sync char is missing
+                                    }
                                 }
-                                catch (IndexOutOfRangeException ex)
-                                {
-                                    frame[z] = SyncChar; //sometimes sync char is missing
-                                }
+                                Generate(frame);
                             }
-                            Generate(frame);
+                            break;
                         }
-                        break;
                     }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                   
                 }
 
             }
-           
+        }
+
+        public override bool Equals(object obj)
+        {
+            try
+            {
+                DataFrame data = (DataFrame)obj;
+                if (this.FrameID == data.FrameID && this.FrameSize == data.FrameSize && this.FrameSubID == data.FrameSubID)
+                {
+                    if (this.Data.SequenceEqual(data.Data))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         protected void Generate(byte[] data)
         {
-            if (data != null && data.Count() > 4)
+            if(data != null && data.Count() > 4)
             {
-
-                SyncCharacter = data[0];
-                FrameID = data[1];
-                FrameSize = (ushort)((data[3] << 8) + data[2]); //little endian
-                FrameSubID = data[4];
-                if (SyncCharacter != SyncChar)
+                var _frameSize = (ushort)((data[3] << 8) + data[2]);
+                var _count = data.Count();
+                if (_count >= _frameSize)
                 {
-                    throw new InvalidDataFrameException("Wrong DataFrame - invalid SyncCharacter");
-                }
-                if (FrameSize < 3 || FrameSize > 1096)
-                {
-                    throw new InvalidDataFrameException("Wrong DataFrame - invalid FrameSize");
-                }
-                byte[] DataInFrame = new byte[FrameSize + 1];
+                    SyncCharacter = data[0];
+                    FrameID = data[1];
+                    FrameSize = _frameSize; //little endian
+                    FrameSubID = data[4];
+                    if (SyncCharacter != SyncChar)
+                    {
+                        throw new InvalidDataFrameException("Wrong DataFrame - invalid SyncCharacter");
+                    }
+                    if (FrameSize < 3 || FrameSize > 1096)
+                    {
+                        throw new InvalidDataFrameException("Wrong DataFrame - invalid FrameSize");
+                    }
+                    byte[] DataInFrame = new byte[FrameSize + 1];
 
-                string[] DataInFrameHex = new string[FrameSize + 1];
-
-                for (int i = 0; i <= FrameSize; i++)
-                {
-                    DataInFrame[i] = data[i];
-                    DataInFrameHex[i] = data[i].ToHex();
-                }
-                Data = DataInFrame;
-                HexData = DataInFrameHex;
-
+                    string[] DataInFrameHex = new string[FrameSize + 1];
+                    for (int i = 0; i <= FrameSize; i++)
+                    {
+                        DataInFrame[i] = data[i];
+                        DataInFrameHex[i] = data[i].ToHex();
+                    }
+                    Data = DataInFrame;
+                    HexData = DataInFrameHex;
+                } 
             }
-
-           
         }
         public byte SyncCharacter
         {
