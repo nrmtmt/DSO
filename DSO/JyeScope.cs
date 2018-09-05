@@ -31,16 +31,18 @@ namespace DSO
         protected Config.ScopeType _scopeType;
         private int _readDelay = 50;
         private int _recordLength = 512;
-        private int _timeBase = 7;
+        private int _timeBase = 13;
         private int _triggerPos = 50;
-        private int _triggerLevel = 100;
-        private int _sensitivity = 7;
+        private int _triggerLevel = 150;
+        private int _sensitivity = 4;
         private int _triggerMode = 0;
         private int _couple = 1;
         private int _triggerSlope = 1;
         private int _verticalPosition = 0;
+        private ICurrentConfig ScopeConfig;
 
         private bool _stopCapture = false;
+        private float _voltPerDiv;
 
         private Queue<byte> _DataBuffer = new Queue<byte>();
         protected Queue<byte> _CurrentBuffer = new Queue<byte>();
@@ -50,6 +52,15 @@ namespace DSO
             get;
             private set;
         }
+
+        public float MaxVoltage
+        {
+            get
+            {
+                return _voltPerDiv * 12;
+            }
+        }
+
         public byte[] ShortBuffer
         {
           get
@@ -130,7 +141,7 @@ namespace DSO
                     }
                     if(rawData.Count() == _recordLength -5)
                     {
-                        NewDataInBuffer(rawData, null);
+                        NewDataInBuffer(getScaledMeasurements(rawData), null);
                     }
                 }
             }
@@ -147,7 +158,7 @@ namespace DSO
                             rawData[i - 5] = DataFrame.Data[i];
                         }
                       
-                        NewDataInBuffer(rawData, null);
+                        NewDataInBuffer(getScaledMeasurements(rawData), null);
                     }
                 }
                 catch (InvalidDataFrameException ex2)
@@ -156,6 +167,42 @@ namespace DSO
                 }
             }
             _GetCurrentParameters();
+        }
+
+        private float[] getScaledMeasurements(byte[] data)
+        {
+            float[] scaled = new float[data.Count()];
+    
+            for (int i = 0; i < data.Count(); i++)
+            {
+                scaled[i] = (scaledData(data[i]));
+            }
+            return scaled;
+        }
+
+        private float scaledData(int data) ///to be changed
+        {
+            if (data < byte.MaxValue)
+            {
+                return ((data - (128)) * (_voltPerDiv / ScopeConfig.PointsPerDiv));
+            }else
+            {
+                return 0;
+            }
+         
+        }
+
+        private byte rawData(float scaled)   ///to be changed
+        {
+            try
+            {
+                return Convert.ToByte((scaled / (_voltPerDiv / ScopeConfig.PointsPerDiv)) + 128);
+
+            }catch(Exception ex)
+            {
+                return 0;
+            }
+            
         }
 
         protected bool WriteFrame(DataFrame frame)
@@ -180,6 +227,7 @@ namespace DSO
                 _couple = (int)param.Couple;
                 _triggerSlope = (int)param.TriggerSlope;
                 _verticalPosition = (int)param.VPosition;
+                _voltPerDiv = param.VoltagePerDiv;
             }
            
         }
@@ -234,8 +282,10 @@ namespace DSO
                 if(bufferSize > 5)
                 {
                     _CurrentBuffer.Clear();
+                    Monitor.Enter(SerialPort);
                     SerialPort.Read(buffer, 0, bufferSize);
-                    foreach(var item in buffer)
+                    Monitor.Exit(SerialPort);
+                    foreach (var item in buffer)
                     {
                         _CurrentBuffer.Enqueue(item);
                     }
@@ -250,7 +300,9 @@ namespace DSO
         {   
             int bufferSize = SerialPort.BytesToRead;
             byte[] buffer = new byte[bufferSize];
+            Monitor.Enter(SerialPort);
             SerialPort.Read(buffer, 0, bufferSize);
+            Monitor.Exit(SerialPort);
             return buffer;
         }
 
@@ -269,7 +321,7 @@ namespace DSO
                 var Ready = (ScopeControlFrames.ScopeReady)new GetAcknowledgedFrame().WriteAcknowledged
                             (typeof(ScopeControlFrames.EnterUSBScopeMode), typeof(ScopeControlFrames.ScopeReady), this);
 
-                     GetCurrentConfig();
+                     ScopeConfig = GetCurrentConfig();
                      _GetCurrentParameters();
                     _scopeType = Ready.ScopeType;
                 return true;
@@ -382,16 +434,16 @@ namespace DSO
             }
         }
 
-        public int TriggerLevel
+        public float TriggerLevel
         {
             get
             {
-                return _triggerLevel;
+                return scaledData((byte)_triggerLevel);
             }
 
             set
             {
-                _triggerLevel = value;
+                _triggerLevel = rawData(value);
                 SetCurrentParameters();
             }
         }
@@ -464,6 +516,20 @@ namespace DSO
             set
             {
                 _recordLength = value;
+                SetCurrentParameters();
+            }
+        }
+
+        public int VerticalPosition
+        {
+            get
+            {
+                return _verticalPosition;
+            }
+
+            set
+            {
+                _verticalPosition = value;
                 SetCurrentParameters();
             }
         }

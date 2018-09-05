@@ -78,6 +78,9 @@ namespace DSO
 
         public enum Timebase
         {
+            divCustom = 0,
+            div50min = 1,
+            div20min = 2,
             div10min = 3,
             div5min = 4,
             div2min = 5,
@@ -107,9 +110,18 @@ namespace DSO
             div2us = 29, //0x1D,
             div1us = 30, //0x1E
             div500ns = 31, //0x1f
+            div200ns = 32,
+            div100ns = 33,
+            div50ns = 34,
+            div20ns = 35,
+            div10ns = 36,
+            div5ns = 37
         }
         public enum VerticalSensitivity
         {
+            divCustom = 0,
+            div100v = 1,
+            div50v = 2,
             div20v = 3,
             div10v = 4,
             div5V = 5,
@@ -124,6 +136,7 @@ namespace DSO
             div5mV = 14,
             div2mV = 15,
         }
+
         public enum ScopeState
         {
             AutoState = 0,
@@ -139,31 +152,6 @@ namespace DSO
         {
             RightAdjustment = 0,
             LeftAdjustment = 1
-        }
-        public class DeviceConfig
-        {
-            bool CH1Present { get; }
-            bool CH2Present { get; }
-            bool IsSensitivityChangeable { get; }
-            bool IsCoupleChangeable { get; }
-            int maxVertSensitivity { get; }
-            int minVertSensitivity { get; }
-            int maxCoupleSetting { get; }
-            int minCoupleSetting { get; }
-            int maxVertPosition { get; }
-            int minVertPosition { get; }
-            int maxTimebase { get; }
-            int minTimebase { get; }
-            int maxTrigMode { get; }
-            int minTrigMode { get; }
-            int maxTrigSlope { get; }
-            int minTrigSlope { get; }
-            int maxTrigLevel { get; }
-            int minTrigLevel { get; }
-            int maxTrigPos { get; }
-            int minTrigPos { get; }
-            int maxRecLength { get; }
-            int minRecLength { get; }
         }
     }
 }

@@ -52,5 +52,7 @@ namespace DSO.Interfaces
 
         int MinRecordLength { get; }
 
+        int PointsPerDiv { get; }
+
     }
 }

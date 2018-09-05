@@ -183,5 +183,12 @@ namespace DSO.DataFrames.DSO068
             }
         }
 
+        public int PointsPerDiv
+        {
+            get
+            {
+                return 10;
+            }
+        }
     }
 }

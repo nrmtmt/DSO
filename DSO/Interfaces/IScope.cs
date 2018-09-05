@@ -27,11 +27,12 @@ namespace DSO
         int ReadDelay { get; set; }
         int TimeBase { get; set; }
         int TriggerPos { get; set; }
-        int TriggerLevel { get; set; }
+        float TriggerLevel { get; set; }
         int Sensitivity { get; set; }
         int TriggerMode { get; set; }
         int Couple { get; set; }
         int TriggerSlope { get; set; }
         int RecordLength { get; set; }
+        int VerticalPosition { get; set; }
     }
 }

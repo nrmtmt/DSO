@@ -88,6 +88,50 @@ namespace DSO.DataFrames
                 return bytes.ToInt();
             }
         }
+        public float VoltagePerDiv
+        {
+            get
+            {
+                byte curV = Data[5];
+                switch (curV)
+                {
+                    case 0:
+                        return 0;       //divCustom = 0,
+                    case 1:
+                        return 100;     //div100v = 1,
+                    case 2:
+                        return 50;      //div50v = 2,
+                    case 3:
+                        return 20;      //div20v = 3,
+                    case 4:
+                        return 10;      //div10v = 4,
+                    case 5:
+                        return 5;       //div5V = 5,
+                    case 6:
+                        return 2;       //div2V = 6,
+                    case 7:
+                        return 1;       //div1V = 7,
+                    case 8:
+                        return 0.5F;    //div500mV = 8,
+                    case 9:
+                        return 0.2F;    //div200mV = 9,
+                    case 10:
+                        return 0.1F;    //div100mV = 10,
+                    case 11:
+                        return 0.05F;   //div50mV = 11,
+                    case 12:
+                        return 0.02F;   //div20mV = 12,
+                    case 13:
+                        return 0.01F;   //div10mV = 13,
+                    case 14:
+                        return 0.005F;  //div5mV = 14,
+                    case 15:
+                        return 0.002F;  //div2mV = 15,
+                    default:
+                        return 0;
+                }
+            }
+        }
         public byte TriggerPosition
         {
             get { return Data[21]; }

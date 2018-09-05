@@ -30,7 +30,7 @@ namespace DSO.Utilities
                     {
                         WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, scope.ShortBuffer, scope.TimeoutTime);
+                    return ReturnFrame(ReturnType, scope.LongBuffer, scope.TimeoutTime);
                 }
                 catch (InvalidDataFrameException ex)
                 {
@@ -44,7 +44,7 @@ namespace DSO.Utilities
                     } 
                 }
             }
-            return null;
+           return null;
            // return ReturnFrame(ReturnType, scope.ShortBuffer, scope.TimeoutTime);
 
 
@@ -55,7 +55,7 @@ namespace DSO.Utilities
             //    stringData += data + ",";
             //}
             //stringData.Remove(stringData.Length - 1);
-            //throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
+            throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
         }
 
 
