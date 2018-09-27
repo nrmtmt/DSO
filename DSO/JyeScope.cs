@@ -57,7 +57,7 @@ namespace DSO
         {
             get
             {
-                return _voltPerDiv * 12;
+                return _voltPerDiv * 6;
             }
         }
 
@@ -282,9 +282,9 @@ namespace DSO
                 if(bufferSize > 5)
                 {
                     _CurrentBuffer.Clear();
-                    Monitor.Enter(SerialPort);
+                    //Monitor.Enter(SerialPort);
                     SerialPort.Read(buffer, 0, bufferSize);
-                    Monitor.Exit(SerialPort);
+                    //Monitor.Exit(SerialPort);
                     foreach (var item in buffer)
                     {
                         _CurrentBuffer.Enqueue(item);

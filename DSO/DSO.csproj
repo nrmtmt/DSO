@@ -50,6 +50,7 @@
     <Compile Include="DSO068\DSO068.cs" />
     <Compile Include="DSO112\DSO112.cs" />
     <Compile Include="FindFrameInStream.cs" />
+    <Compile Include="Initialize.cs" />
     <Compile Include="Interfaces\ICurrentConfig.cs" />
     <Compile Include="JyeScope.cs" />
     <Compile Include="DataFrames\DataFrame.cs" />

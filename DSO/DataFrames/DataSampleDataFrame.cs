@@ -14,6 +14,10 @@ namespace DSO
             {
                 throw new InvalidDataFrameException("Wrong DataSampleDataFrame - invalid FrameID");
             }
+            else if (this.Data.Count() < 13)
+            {
+                throw new InvalidDataFrameException("Wrong DataBlockDataFrame - not enough data");
+            }
         }
     }
 }

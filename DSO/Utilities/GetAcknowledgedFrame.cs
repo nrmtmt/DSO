@@ -3,40 +3,51 @@ using DSO.ScopeControlFrames;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace DSO.Utilities
 {
+    /**
+       Most commands has their return frames. For example when you send to device "GetParam" data frame, you expect CurrParamDataFrame in response. 
+       This class is for be sure that you will have a corrent answer from your request.
+    **/
     public class GetAcknowledgedFrame
     {
         string lastEx;
-
-        public DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope scope)
+        ///<summary>
+        ///Most commands has their return frames. For example when you send to device "GetParam" data frame, you expect "CurrParamDataFrame" in response. 
+        ///<param name="SendType">Command frame type</param>
+        ///<param name="ReturnType">Expected response frame type</param>
+        ///<param name="Scope">Tralala</param>
+        ///</summary>
+        ///
+        public DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope Scope)  
         {
             var stopwatch = new Stopwatch();
             stopwatch.Restart();
-            while (stopwatch.ElapsedMilliseconds < scope.TimeoutTime)
+            while (stopwatch.ElapsedMilliseconds < Scope.TimeoutTime)
             {
                 try
                 {
                     if (SendType == typeof(GetParameters))
                     {
-                        WriteFrame(new ScopeControlFrames.GetParameters(), scope.SerialPort);
+                        WriteFrame(new ScopeControlFrames.GetParameters(), Scope.SerialPort);
                     }
                     else if(SendType == typeof(GetConfig))
                     {
-                        WriteFrame(new ScopeControlFrames.GetConfig(), scope.SerialPort);
+                        WriteFrame(new ScopeControlFrames.GetConfig(), Scope.SerialPort);
                     }
                     else if (SendType == typeof(EnterUSBScopeMode))
                     {
-                        WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), scope.SerialPort);
+                        WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), Scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, scope.LongBuffer, scope.TimeoutTime);
+                    return ReturnFrame(ReturnType, Scope.ShortBuffer, Scope.TimeoutTime);
                 }
                 catch (InvalidDataFrameException ex)
                 {
                     try
                     {
-                        return ReturnFrame(ReturnType, scope.LongBuffer, scope.TimeoutTime);
+                        return ReturnFrame(ReturnType, Scope.LongBuffer, Scope.TimeoutTime);
                     }
                     catch (InvalidDataFrameException ex2)
                     {
@@ -44,10 +55,10 @@ namespace DSO.Utilities
                     } 
                 }
             }
-           return null;
-           // return ReturnFrame(ReturnType, scope.ShortBuffer, scope.TimeoutTime);
 
-
+            //return ReturnFrame(ReturnType, scope.ShortBuffer, scope.TimeoutTime);
+            //WriteAcknowledged(SendType, ReturnType, scope);
+            return null;
 
             //stringData = "";
             //foreach (var data in scope.ShortBuffer)
@@ -55,7 +66,7 @@ namespace DSO.Utilities
             //    stringData += data + ",";
             //}
             //stringData.Remove(stringData.Length - 1);
-            throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
+            //throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
         }
 
 
@@ -99,8 +110,9 @@ namespace DSO.Utilities
 
         private bool WriteFrame(DataFrame frame, IStreamResource port)
         {
+            //Monitor.Enter(port);
             port.Write(frame.Data, 0, frame.Data.Count());
-            System.Threading.Thread.Sleep(10);
+            //Monitor.Exit(port);
             return true;
         }
     }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DSO.DSO112
 {
-    class DSO112 :JyeScope
+    public class DSO112 :JyeScope
     {
         private Dictionary<int, string> _AvailableRecordLength = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableSensitivitySettings = new Dictionary<int, string>();
