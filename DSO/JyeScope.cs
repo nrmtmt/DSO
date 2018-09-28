@@ -16,20 +16,22 @@ namespace DSO
 {
     public abstract class JyeScope : IScope
     {
-        //interface event
+        //interface event. New measurements are measured by device.
         public event System.EventHandler NewDataInBuffer = delegate { };
         //info event (for debug)
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
-        protected int timeoutTime = 500; //time in with TimeoutException will be thrown
+
+        protected int timeoutTime = 1000; //time in with TimeoutException will be thrown. Should be 10 times more than readDelay (to look nice :))
         //back fields
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
         private bool _startCapture = false;
         protected Config.ScopeType _scopeType;
-        private int _readDelay = 50;
+        private int _readDelay = 100; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
+            //Cold start parameters. Shoud be overwritten at first start.
         private int _recordLength = 512;
         private int _timeBase = 13;
         private int _triggerPos = 50;
@@ -39,8 +41,8 @@ namespace DSO
         private int _couple = 1;
         private int _triggerSlope = 1;
         private int _verticalPosition = 0;
+            //End cold start parameters.
         private ICurrentConfig ScopeConfig;
-
         private bool _stopCapture = false;
         private float _voltPerDiv;
 
@@ -105,7 +107,7 @@ namespace DSO
                 _AvailableTriggerSlopeSettings.Add(slope, Enum.GetName(typeof(DSO.Config.Slope), slope));
             }
         }
-
+        //event raised when buffer contains more than 5 elements. RaisedBy ReadBuffer() method
         private void Port_DataReceivedEvent(object sender, EventArgs e)
         {
             Info(_CurrentBuffer.ToArray(), null);
@@ -114,95 +116,21 @@ namespace DSO
                 _DataBuffer.Enqueue(data);
             }
 
-            if (_DataBuffer.Count() > _recordLength * 2)
+            if (_DataBuffer.Count() > _recordLength * 2 && ScopeConfig != null)
             {
-                GenerateFrame(_DataBuffer.ToArray());
-               
+                // GenerateFrame(_DataBuffer.ToArray());
+                var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, _recordLength);
+                if ( measurements!= null)
+                {
+                    NewDataInBuffer(measurements, null);
+                    _GetCurrentParameters();
+                }
+
                 foreach (byte data in _CurrentBuffer)
                 {
                     _DataBuffer.Dequeue();
                 }
             }
-          
-        }
-
-        private void GenerateFrame(byte[] data)
-        {
-          
-            try
-            {
-                var DataFrame = new DataBlockDataFrame(data);
-                if (DataFrame != null)
-                {
-                    byte[] rawData = new byte[DataFrame.Data.Count() - 14]; //4 reserved
-                    for (int i = 5; i < DataFrame.Data.Count() - 9; i++) //[syncChar][frameID][frameSize][frameSize][frameFunc][data1]...[dataN][8][0][0][0][0][0][0][0][0]
-                    {
-                        rawData[i - 5] = DataFrame.Data[i];
-                    }
-                    if(rawData.Count() == _recordLength -5)
-                    {
-                        NewDataInBuffer(getScaledMeasurements(rawData), null);
-                    }
-                }
-            }
-            catch (InvalidDataFrameException ex)
-            {
-                try
-                {
-                    var DataFrame = new DataSampleDataFrame(data);
-                    if (DataFrame != null)
-                    {
-                        byte[] rawData = new byte[DataFrame.Data.Count() - 13]; //3 reserved
-                        for (int i = 5; i < DataFrame.Data.Count() - 9; i++)
-                        {
-                            rawData[i - 5] = DataFrame.Data[i];
-                        }
-                      
-                        NewDataInBuffer(getScaledMeasurements(rawData), null);
-                    }
-                }
-                catch (InvalidDataFrameException ex2)
-                {
-
-                }
-            }
-            _GetCurrentParameters();
-        }
-
-        private float[] getScaledMeasurements(byte[] data)
-        {
-            float[] scaled = new float[data.Count()];
-    
-            for (int i = 0; i < data.Count(); i++)
-            {
-                scaled[i] = (scaledData(data[i]));
-            }
-            return scaled;
-        }
-
-        private float scaledData(int data) ///to be changed
-        {
-            if (data < byte.MaxValue)
-            {
-                return ((data - (128)) * (_voltPerDiv / ScopeConfig.PointsPerDiv));
-            }else
-            {
-                return 0;
-            }
-         
-        }
-
-        private byte rawData(float scaled)   ///to be changed
-        {
-            try
-            {
-                return Convert.ToByte((scaled / (_voltPerDiv / ScopeConfig.PointsPerDiv)) + 128);
-
-            }catch(Exception ex)
-            {
-                return 0;
-            }
-            
         }
 
         protected bool WriteFrame(DataFrame frame)
@@ -214,7 +142,8 @@ namespace DSO
 
         private void _GetCurrentParameters()
         {
-            var param = (CurrParamDataFrame)new GetAcknowledgedFrame().WriteAcknowledged
+          
+            var param = (CurrParamDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
                (typeof(ScopeControlFrames.GetParameters), typeof(CurrParamDataFrame), this);
             if(param != null)
             {
@@ -317,8 +246,9 @@ namespace DSO
             Thread BackgroundReader = new Thread(ReadBuffer);
             BackgroundReader.IsBackground = true;
             BackgroundReader.Start();
+
           
-                var Ready = (ScopeControlFrames.ScopeReady)new GetAcknowledgedFrame().WriteAcknowledged
+                var Ready = (ScopeControlFrames.ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
                             (typeof(ScopeControlFrames.EnterUSBScopeMode), typeof(ScopeControlFrames.ScopeReady), this);
 
                      ScopeConfig = GetCurrentConfig();
@@ -438,12 +368,14 @@ namespace DSO
         {
             get
             {
-                return scaledData((byte)_triggerLevel);
+                //return scaledData((byte)_triggerLevel);
+                return Measurements.GetScaledData((byte)_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv);
             }
 
             set
             {
-                _triggerLevel = rawData(value);
+                //_triggerLevel = rawData(value);
+                _triggerLevel = Measurements.GetRawData(value, _voltPerDiv, ScopeConfig.PointsPerDiv);
                 SetCurrentParameters();
             }
         }

@@ -9,19 +9,33 @@ namespace DSO.Utilities
 {
     /**
        Most commands has their return frames. For example when you send to device "GetParam" data frame, you expect CurrParamDataFrame in response. 
-       This class is for be sure that you will have a corrent answer from your request.
+       This class is for be sure that you will have a corrent answer for your request.
+       Example:
+
+                      //cast return to expected frame                     
+          var Ready = (ScopeControlFrames.ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
+                                //TypeOf Request data frame (in this case request to enter USB Mode)                        
+                            (typeof(ScopeControlFrames.EnterUSBScopeMode), 
+                                      //TypeOf Response (and returned) data frame (in this case response should be ScopeReady data frame) 
+                                    typeof(ScopeControlFrames.ScopeReady), this);
     **/
-    public class GetAcknowledgedFrame
+    ///<summary>
+    /// Most commands has their return frames. For example when you send to device "GetParam" data frame, you expect CurrParamDataFrame in response. 
+    /// This class is for be sure that you will have a corrent answer for your request.
+    ///</summary>
+    ///
+    public class AcknowledgedFrame
     {
         string lastEx;
         ///<summary>
-        ///Most commands has their return frames. For example when you send to device "GetParam" data frame, you expect "CurrParamDataFrame" in response. 
+        ///Returns response frame from request<br />
+        ///
         ///<param name="SendType">Command frame type</param>
         ///<param name="ReturnType">Expected response frame type</param>
-        ///<param name="Scope">Tralala</param>
+        ///<param name="Scope">JyeScope object</param>
         ///</summary>
         ///
-        public DataFrame WriteAcknowledged(Type SendType, Type ReturnType, JyeScope Scope)  
+        public DataFrame GetAcknowledgedFrame(Type SendType, Type ReturnType, JyeScope Scope)  
         {
             var stopwatch = new Stopwatch();
             stopwatch.Restart();
@@ -56,8 +70,8 @@ namespace DSO.Utilities
                 }
             }
 
-            //return ReturnFrame(ReturnType, scope.ShortBuffer, scope.TimeoutTime);
-            //WriteAcknowledged(SendType, ReturnType, scope);
+            //return ReturnFrame(ReturnType, Scope.ShortBuffer, Scope.TimeoutTime);
+            //GetAcknowledgedFrame(SendType, ReturnType, Scope);
             return null;
 
             //stringData = "";

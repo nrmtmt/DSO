@@ -59,6 +59,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScopeControlFrames\ScopeControl.cs" />
     <Compile Include="Utilities\GetAcknowledgedFrame.cs" />
+    <Compile Include="Utilities\Measurements.cs" />
     <Compile Include="Utilities\SerialPortAdapter.cs" />
     <Compile Include="Utilities\Util.cs" />
   </ItemGroup>

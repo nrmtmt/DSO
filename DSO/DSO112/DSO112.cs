@@ -35,7 +35,7 @@ namespace DSO.DSO112
         {
             try
             {
-                    var conf = (CurrConfigDataFrame)new GetAcknowledgedFrame().WriteAcknowledged
+                    var conf = (CurrConfigDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
                          (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);
                     return conf;
             }
