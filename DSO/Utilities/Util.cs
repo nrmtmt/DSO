@@ -29,7 +29,18 @@ namespace DSO
                 return BitConverter.ToInt16(value, 0);
             }
         }
+        public static string ToCommaDelimitedString(this Byte[] value)
+        {
+            string Data = "";
+            foreach (var data in value)
+            {
+                Data += data + ",";
+            }
+            Data.Remove(Data.Length - 1);
+            return Data;
+        }
     }
+    
 
     public static class BitArrayExtension
     {
@@ -51,7 +62,6 @@ namespace DSO
         {
             DSO068 = 4,
             DSO112A = 5,
-            Unspecified = 999,
         }
 
         public enum Coupling

@@ -16,21 +16,21 @@ namespace DSO
 {
     public abstract class JyeScope : IScope
     {
-        //interface event. New measurements are measured by device.
+        //interface event. New measurements are measured by device. At this moment this delegate is generic.
         public event System.EventHandler NewDataInBuffer = delegate { };
-        //info event (for debug)
+        //info event (for debug), also generic delegate.
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
 
-        protected int timeoutTime = 1000; //time in with TimeoutException will be thrown. Should be 10 times more than readDelay (to look nice :))
+        protected int timeoutTime = 500; //time in with TimeoutException will be thrown. Should be 10 times more than readDelay (to look nice :))
         //back fields
         private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
         private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
         private bool _startCapture = false;
         protected Config.ScopeType _scopeType;
-        private int _readDelay = 100; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
+        private int _readDelay = 50; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
             //Cold start parameters. Shoud be overwritten at first start.
         private int _recordLength = 512;
         private int _timeBase = 13;
@@ -41,10 +41,11 @@ namespace DSO
         private int _couple = 1;
         private int _triggerSlope = 1;
         private int _verticalPosition = 0;
-            //End cold start parameters.
+        //End cold start parameters.
         private ICurrentConfig ScopeConfig;
         private bool _stopCapture = false;
         private float _voltPerDiv;
+       
 
         private Queue<byte> _DataBuffer = new Queue<byte>();
         protected Queue<byte> _CurrentBuffer = new Queue<byte>();
@@ -118,7 +119,6 @@ namespace DSO
 
             if (_DataBuffer.Count() > _recordLength * 2 && ScopeConfig != null)
             {
-                // GenerateFrame(_DataBuffer.ToArray());
                 var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, _recordLength);
                 if ( measurements!= null)
                 {
@@ -187,18 +187,59 @@ namespace DSO
                                                              DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)], 
                                                              _verticalPosition);
                 WriteFrame(curParam);
-                //Thread.Sleep(timeoutTime);
-                var curParam2 = GetCurrentParameters();
+                //System.Threading.Thread.Sleep(_readDelay);
+                //if (!FrameAcknowledged())
+                //{
+                //    //do it again
+                //}
+                //else
+                //{
+                //    return true;
+                //}
+
+                var curParam2 = GetCurrentParameters();  //old version of acknowledge
                 if (!curParam.Equals(curParam2))
                 {
                     //do it again
-                }else
+                }
+                else
                 {
                     return true;
                 }
             }
-           //return SetCurrentParameters();
-           throw new TimeoutException("Timeout while waiting for acknowledge");
+            throw new TimeoutException("Timeout while waiting for acknowledge");
+        }
+        private bool FrameAcknowledged()
+        {
+            string output = "";
+            var tempBuff = _CurrentBuffer;
+            bool found = false;
+            int zeroCount = 0;
+            foreach (byte val in tempBuff)
+            {
+                if (val > 39 && val < 42)
+                {
+                    output += Convert.ToString(val);
+                    found = true;
+                    continue;
+                }
+                if (val == 0 && found == true)
+                {
+                    output += Convert.ToString(val);
+                    zeroCount++;
+
+                        if(zeroCount > 2)
+                        {
+                            return true; // 41, 0, 0, 0, 0 - DSO112a ack after sending params
+                                         // 40, 0, 0, 0     - DSO068 ack after sending params
+                        }
+                }
+                else
+                {
+                    found = false;
+                }
+            }
+            return false;
         }
 
         private void ReadBuffer()
@@ -332,6 +373,7 @@ namespace DSO
             set
             {
                 _readDelay = value;
+                timeoutTime = _readDelay * 10;
                 SetCurrentParameters();
             }
         }
@@ -368,13 +410,11 @@ namespace DSO
         {
             get
             {
-                //return scaledData((byte)_triggerLevel);
                 return Measurements.GetScaledData((byte)_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv);
             }
 
             set
             {
-                //_triggerLevel = rawData(value);
                 _triggerLevel = Measurements.GetRawData(value, _voltPerDiv, ScopeConfig.PointsPerDiv);
                 SetCurrentParameters();
             }
@@ -451,7 +491,7 @@ namespace DSO
                 SetCurrentParameters();
             }
         }
-
+      
         public int VerticalPosition
         {
             get
@@ -463,6 +503,14 @@ namespace DSO
             {
                 _verticalPosition = value;
                 SetCurrentParameters();
+            }
+        }
+
+        public string ScopeName
+        {
+            get
+            {
+                return Convert.ToString(_scopeType);
             }
         }
     }

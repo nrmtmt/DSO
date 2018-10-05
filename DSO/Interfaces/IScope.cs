@@ -23,6 +23,7 @@ namespace DSO
         Dictionary<int, string> AvailableSenitivitySettings { get; }
         Dictionary<int, string> AvailableTriggerModeSettings { get; }
         Dictionary<int, string> AvailableRecordLength { get; }
+        string ScopeName { get; }
 
         int ReadDelay { get; set; }
         int TimeBase { get; set; }

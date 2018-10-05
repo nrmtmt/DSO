@@ -50,6 +50,7 @@ namespace DSO.DataFrames
 
             //data[27] = bytes[2]; data[28] = bytes[3];
             base.Generate(data);
+            string output = data.ToCommaDelimitedString();
         }
 
         public Config.VerticalSensitivity VSensitivity

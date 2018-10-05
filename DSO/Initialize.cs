@@ -1,28 +1,45 @@
 ﻿using DSO.Utilities;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace DSO
 {
-    public class Initialize
+    public static class Initialize
     {
+        ///<summary>
+        ///Returns JyeScope object. If scope is not recognized, throws ScopeNotRecognizedException with information about returned scope type. If no scope is found, throws NullReferenceException. 
+        ///<param name="port">IStreamResource serial port</param>
+        ///</summary>
+        ///
         public static JyeScope GetScope(SerialPortAdapter port)
         {
-            WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), port);
-            System.Threading.Thread.Sleep(50);
-            ScopeControlFrames.ScopeReady Ready = new ScopeControlFrames.ScopeReady(InstReadBuffer(port));
-            Config.ScopeType properScope = Ready.ScopeType;
-            switch (properScope)
+            var stopwatch = new Stopwatch();
+            stopwatch.Restart();
+            while (stopwatch.ElapsedMilliseconds < 500)
             {
-                case Config.ScopeType.DSO068:
-                    return new DSO068.DSO068(port);
-                case Config.ScopeType.DSO112A:
-                    return new DSO112.DSO112(port);
-                case Config.ScopeType.Unspecified:
-                    throw new ScopeNotDetectedException($"Scope not detected. Returned scope type: {(int)Ready.ScopeType}.");
-                default:
-                    throw new NullReferenceException();
+                WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), port);
+                System.Threading.Thread.Sleep(50);
+                try
+                {
+                    ScopeControlFrames.ScopeReady Ready = new ScopeControlFrames.ScopeReady(InstReadBuffer(port));
+                    Config.ScopeType properScope = Ready.ScopeType;
+                    switch (properScope)
+                    {
+                        case Config.ScopeType.DSO068:
+                            return new DSO068.DSO068(port);
+                        case Config.ScopeType.DSO112A:
+                            return new DSO112.DSO112(port);
+                        default:
+                            throw new ScopeNotRecognizedException($"Scope not recognized. Returned scope type: {(int)Ready.ScopeType}.");
+                    }
+                }
+                catch (InvalidDataFrameException ex)
+                {
+                    //try again
+                }
             }
+            throw new NullReferenceException("Scope not detected.");
         }
         private static byte[] InstReadBuffer(IStreamResource port)
         {
@@ -39,10 +56,10 @@ namespace DSO
             return true;
         }
     }
-    public class ScopeNotDetectedException : Exception
+    public class ScopeNotRecognizedException : Exception
     {
-        public ScopeNotDetectedException() : base() { }
-        public ScopeNotDetectedException(string message) : base(message) { }
-        public ScopeNotDetectedException(string message, System.Exception inner) : base(message, inner) { }
+        public ScopeNotRecognizedException() : base() { }
+        public ScopeNotRecognizedException(string message) : base(message) { }
+        public ScopeNotRecognizedException(string message, System.Exception inner) : base(message, inner) { }
     }
 }

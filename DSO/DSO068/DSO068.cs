@@ -32,7 +32,7 @@ namespace DSO.DSO068
 
         }
    
-        public override ICurrentConfig GetCurrentConfig() //seems to be same in each jye scope
+        public override ICurrentConfig GetCurrentConfig()
         {
             var conf = (CurrConfigDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
                         (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);

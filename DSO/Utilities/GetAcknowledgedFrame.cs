@@ -9,7 +9,7 @@ namespace DSO.Utilities
 {
     /**
        Most commands has their return frames. For example when you send to device "GetParam" data frame, you expect CurrParamDataFrame in response. 
-       This class is for be sure that you will have a corrent answer for your request.
+       This class is for be sure that you will have a correct answer for your request.
        Example:
 
                       //cast return to expected frame                     

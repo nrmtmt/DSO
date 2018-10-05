@@ -13,7 +13,7 @@ namespace DSO.Utilities
     public static class Measurements
     {
         ///<summary>
-        ///Get scaled measurements from buffer. If buffer is not contain measurements, null is returned. 
+        ///Returns scaled measurements from buffer. If buffer is not contain measurements, null is returned. 
         ///<param name="data">Raw buffer data</param>
         ///<param name="voltsPerDiv">Voltage per division (in volts)</param>
         ///<param name="pointsPerDiv">Points per division (from scope Config class)</param>
@@ -74,7 +74,7 @@ namespace DSO.Utilities
         }
 
         ///<summary>
-        ///Get scaled measurement from single raw data. If data is not valid, null is returned. 
+        ///Returns scaled measurement from single raw data. If data is not valid, null is returned. 
         ///<param name="data">Raw data</param>
         ///<param name="voltsPerDiv">Voltage per division (in volts)</param>
         ///<param name="pointsPerDiv">Points per division (from scope Config class)</param>
@@ -94,7 +94,7 @@ namespace DSO.Utilities
 
         }
         ///<summary>
-        ///Return raw data from real one. If data is not valid, null is returned. 
+        ///Return raw data from real one. If data is not valid, 0 is returned. 
         ///<param name="scaled">Scaled data</param>
         ///<param name="voltsPerDiv">Voltage per division (in volts)</param>
         ///<param name="pointsPerDiv">Points per division (from scope Config class)</param>

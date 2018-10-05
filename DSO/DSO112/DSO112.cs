@@ -31,7 +31,7 @@ namespace DSO.DSO112
             }
 
         }
-        public override ICurrentConfig GetCurrentConfig() //seems to be same in each jye scope
+        public override ICurrentConfig GetCurrentConfig()
         {
             try
             {
