@@ -1,4 +1,5 @@
-﻿using DSO.DataFrames.DSO068;
+﻿using DSO.DataFrames;
+using DSO.DataFrames.DSO068;
 using DSO.Interfaces;
 using DSO.Utilities;
 using System;
@@ -39,7 +40,29 @@ namespace DSO.DSO068
             return conf;
         }
 
-      
+        protected override bool FrameAcknowledged()
+        {
+            //40, 0, 0, 0
+           var curParam = new CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
+                                                          (DSO.Config.Timebase)_timeBase,
+                                                          (DSO.Config.Slope)_triggerSlope,
+                                                          (DSO.Config.TriggerMode)_triggerMode,
+                                                          (DSO.Config.Coupling)_couple,
+                                                          (byte)_triggerLevel,
+                                                          (byte)_triggerPos,
+                                                          DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)],
+                                                          _verticalPosition);
+            var curParam2 = GetCurrentParameters();
+            if (!curParam.Equals(curParam2))
+            {
+
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
 
         public override Dictionary<int, string> AvailableRecordLength
         {

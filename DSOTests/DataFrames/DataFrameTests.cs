@@ -7,13 +7,15 @@ using System.Text;
 using System.Threading.Tasks;
 using DSO.DataFrames.DSO068;
 using DSO.DataFrames;
+using DSO.DataFrames.DSO112;
 
 namespace DSO.Tests
 {
     [TestClass()]
     public class DataFrameTests
     {
-        string str = "254,192,52,0,34,11,1,16,0,0,0,0,0,21,0,0,0,0,1,127,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0";
+        //254, 230, 4, 0, 0
+        string str = "254, 230, 4, 0, 0";
 
         public byte[] Data()
         {
@@ -26,19 +28,20 @@ namespace DSO.Tests
         }
 
         [TestMethod()]
-        public void CurrConfigDataFrameTest()
+        public void CurrConfigDataFrameTest112A()
         { 
-           // CurrConfigDataFrame config = new CurrConfigDataFrame(Data());
+         DSO.DataFrames.DSO112.CurrConfigDataFrame config = new DataFrames.DSO112.CurrConfigDataFrame(Data());
+        }
+        public void CurrConfigDataFrameTest068()
+        {
+            DSO.DataFrames.DSO068.CurrConfigDataFrame config = new DataFrames.DSO068.CurrConfigDataFrame(Data());
+        }
 
-          var param =  (new CurrParamDataFrame((DSO.Config.VerticalSensitivity)8,
-                                                             (DSO.Config.Timebase)27,
-                                                             (DSO.Config.Slope)0,
-                                                             (DSO.Config.TriggerMode)0,
-                                                             (DSO.Config.Coupling)1,
-                                                             (byte)127,
-                                                             (byte)50,
-                                                             DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, 0)],
-                                                             127));
+        [TestMethod()]
+        public void CommandAcknowledgedDataFrameTest()
+        {
+            var data = Data();
+           CommandAcknowledgedDataFrame config = new CommandAcknowledgedDataFrame(data);
         }
 
         [TestMethod()]

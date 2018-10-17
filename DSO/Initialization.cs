@@ -1,11 +1,12 @@
-﻿using DSO.Utilities;
+﻿using DSO.Exceptions;
+using DSO.Utilities;
 using System;
 using System.Diagnostics;
 using System.Linq;
 
 namespace DSO
 {
-    public static class Initialize
+    public static class Initialization
     {
         ///<summary>
         ///Returns JyeScope object. If scope is not recognized, throws ScopeNotRecognizedException with information about returned scope type. If no scope is found, throws NullReferenceException. 

@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DSO</RootNamespace>
     <AssemblyName>DSO</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,12 +46,16 @@
     <Compile Include="DataFrames\DataBlockDataFrame.cs" />
     <Compile Include="DataFrames\DataSampleDataFrame.cs" />
     <Compile Include="DataFrames\DSO068\SpecialCommandDataFrame.cs" />
+    <Compile Include="DataFrames\DSO112\CommandAcknowledgedDataFrame.cs" />
     <Compile Include="DataFrames\DSO112\CurrConfigDataFrame.cs" />
     <Compile Include="DataFrames\DSO112\SpecialCommandDataFrame.cs" />
     <Compile Include="DSO068\DSO068.cs" />
     <Compile Include="DSO112\DSO112.cs" />
-    <Compile Include="FindFrameInStream.cs" />
-    <Compile Include="Initialize.cs" />
+    <Compile Include="Exceptions\ParametersNotSetException.cs" />
+    <Compile Include="Exceptions\FrameNotAcknowledgedException.cs" />
+    <Compile Include="Exceptions\InvalidDataFrameException.cs" />
+    <Compile Include="Exceptions\ScopeNotRecognizedException.cs" />
+    <Compile Include="Initialization.cs" />
     <Compile Include="Interfaces\ICurrentConfig.cs" />
     <Compile Include="JyeScope.cs" />
     <Compile Include="DataFrames\DataFrame.cs" />
@@ -58,7 +63,7 @@
     <Compile Include="Interfaces\IStreamResource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScopeControlFrames\ScopeControl.cs" />
-    <Compile Include="Utilities\GetAcknowledgedFrame.cs" />
+    <Compile Include="Utilities\AcknowledgedFrame.cs" />
     <Compile Include="Utilities\Measurements.cs" />
     <Compile Include="Utilities\SerialPortAdapter.cs" />
     <Compile Include="Utilities\Util.cs" />

@@ -11,6 +11,7 @@ using DSO.Utilities;
 using DSO.DataFrames;
 using DSO.Interfaces;
 using DSO.DataFrames.DSO068;
+using DSO.Exceptions;
 
 namespace DSO
 {
@@ -30,17 +31,17 @@ namespace DSO
         private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
         private bool _startCapture = false;
         protected Config.ScopeType _scopeType;
-        private int _readDelay = 50; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
-            //Cold start parameters. Shoud be overwritten at first start.
-        private int _recordLength = 512;
-        private int _timeBase = 13;
-        private int _triggerPos = 50;
-        private int _triggerLevel = 150;
-        private int _sensitivity = 4;
-        private int _triggerMode = 0;
-        private int _couple = 1;
-        private int _triggerSlope = 1;
-        private int _verticalPosition = 0;
+        protected int _readDelay = 50; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
+                                      //Cold start parameters. Shoud be overwritten at first start.
+        protected int _recordLength = 512;
+        protected int _timeBase = 13;
+        protected int _triggerPos = 50;
+        protected int _triggerLevel = 150;
+        protected int _sensitivity = 4;
+        protected int _triggerMode = 0;
+        protected int _couple = 1;
+        protected int _triggerSlope = 1;
+        protected int _verticalPosition = 0;
         //End cold start parameters.
         private ICurrentConfig ScopeConfig;
         private bool _stopCapture = false;
@@ -119,7 +120,7 @@ namespace DSO
 
             if (_DataBuffer.Count() > _recordLength * 2 && ScopeConfig != null)
             {
-                var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, _recordLength);
+                var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, _recordLength, _verticalPosition);
                 if ( measurements!= null)
                 {
                     NewDataInBuffer(measurements, null);
@@ -172,33 +173,31 @@ namespace DSO
             return true;
         }
 
-        private bool SetCurrentParameters()
+        public bool SetCurrentParameters()
         {
+
             var stopwatch = Stopwatch.StartNew();
             while (stopwatch.ElapsedMilliseconds < timeoutTime) 
             {
-                var curParam = new CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
-                                                             (DSO.Config.Timebase)_timeBase,
-                                                             (DSO.Config.Slope)_triggerSlope,
-                                                             (DSO.Config.TriggerMode)_triggerMode, 
-                                                             (DSO.Config.Coupling)_couple,
-                                                             (byte)_triggerLevel, 
-                                                             (byte)_triggerPos, 
-                                                             DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)], 
-                                                             _verticalPosition);
-                WriteFrame(curParam);
-                //System.Threading.Thread.Sleep(_readDelay);
-                //if (!FrameAcknowledged())
-                //{
-                //    //do it again
-                //}
-                //else
-                //{
-                //    return true;
-                //}
+                CurrParamDataFrame curParam = null;
+                try
+                {
+                    curParam = new CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
+                                                           (DSO.Config.Timebase)_timeBase,
+                                                           (DSO.Config.Slope)_triggerSlope,
+                                                           (DSO.Config.TriggerMode)_triggerMode,
+                                                           (DSO.Config.Coupling)_couple,
+                                                           (byte)_triggerLevel,
+                                                           (byte)_triggerPos,
+                                                           DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)],
+                                                           _verticalPosition);                
+                    WriteFrame(curParam);
+                } catch (Exception ex)
+                {
+                    throw new ParametersNotSetException("Cannot set parameters. Error while writing or creating DataFrame: " + ex.Message);
+                }
 
-                var curParam2 = GetCurrentParameters();  //old version of acknowledge
-                if (!curParam.Equals(curParam2))
+                if (!FrameAcknowledged())
                 {
                     //do it again
                 }
@@ -207,40 +206,9 @@ namespace DSO
                     return true;
                 }
             }
-            throw new TimeoutException("Timeout while waiting for acknowledge");
+            throw new ParametersNotSetException("Cannot set parameters. Timeout while waiting for acknowledge.");
         }
-        private bool FrameAcknowledged()
-        {
-            string output = "";
-            var tempBuff = _CurrentBuffer;
-            bool found = false;
-            int zeroCount = 0;
-            foreach (byte val in tempBuff)
-            {
-                if (val > 39 && val < 42)
-                {
-                    output += Convert.ToString(val);
-                    found = true;
-                    continue;
-                }
-                if (val == 0 && found == true)
-                {
-                    output += Convert.ToString(val);
-                    zeroCount++;
 
-                        if(zeroCount > 2)
-                        {
-                            return true; // 41, 0, 0, 0, 0 - DSO112a ack after sending params
-                                         // 40, 0, 0, 0     - DSO068 ack after sending params
-                        }
-                }
-                else
-                {
-                    found = false;
-                }
-            }
-            return false;
-        }
 
         private void ReadBuffer()
         {
@@ -280,6 +248,7 @@ namespace DSO
         {
             return _CurrentBuffer.ToArray();
         }
+        protected abstract bool FrameAcknowledged();
 
         //Interface implementation
         public bool Connect()
@@ -294,7 +263,7 @@ namespace DSO
 
                      ScopeConfig = GetCurrentConfig();
                      _GetCurrentParameters();
-                    _scopeType = Ready.ScopeType;
+                     _scopeType = Ready.ScopeType;
                 return true;
         }
 
@@ -334,6 +303,7 @@ namespace DSO
         {
             throw new NotImplementedException();
         }
+
 
         public abstract Dictionary<int, string> AvailableTimebaseSettings { get; }
 
@@ -410,7 +380,7 @@ namespace DSO
         {
             get
             {
-                return Measurements.GetScaledData((byte)_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv);
+                return Measurements.GetScaledData((byte)_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv, _verticalPosition);
             }
 
             set

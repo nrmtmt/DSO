@@ -1,4 +1,5 @@
 ﻿using DSO.DataFrames.DSO112;
+using DSO.Exceptions;
 using DSO.Interfaces;
 using DSO.Utilities;
 using System;
@@ -43,6 +44,21 @@ namespace DSO.DSO112
             {
             }
             return GetCurrentConfig();
+        }
+
+        protected override bool FrameAcknowledged()
+        {
+            var tempBuff = _CurrentBuffer;
+            try
+            {
+                var cmd = new DataFrames.DSO112.CommandAcknowledgedDataFrame(tempBuff.ToArray());
+                return true;
+            }
+            catch (InvalidDataFrameException)
+            {
+                return false;
+            }
+
         }
 
         public override Dictionary<int, string> AvailableRecordLength

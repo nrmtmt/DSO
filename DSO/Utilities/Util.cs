@@ -71,7 +71,7 @@ namespace DSO
             GND = 2,
         }
 
-        public static  int[] RecLength = new int[] { 256, 512, 1024 };
+        public static  int[] RecLength = new int[] { 256, 512, 1024, 2048, 4096, 8192, 16384};
        
         public enum Slope
         {
@@ -130,10 +130,10 @@ namespace DSO
         public enum VerticalSensitivity
         {
             divCustom = 0,
-            div100v = 1,
-            div50v = 2,
-            div20v = 3,
-            div10v = 4,
+            div100V = 1,
+            div50V = 2,
+            div20V = 3,
+            div10V = 4,
             div5V = 5,
             div2V = 6,
             div1V = 7,

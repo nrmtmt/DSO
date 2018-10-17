@@ -1,4 +1,5 @@
-﻿using DSO.Interfaces;
+﻿using DSO.Exceptions;
+using DSO.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;

@@ -1,9 +1,11 @@
 ﻿using DSO.DataFrames;
+using DSO.Exceptions;
 using DSO.ScopeControlFrames;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+
 
 namespace DSO.Utilities
 {
@@ -26,7 +28,7 @@ namespace DSO.Utilities
     ///
     public class AcknowledgedFrame
     {
-        string lastEx;
+        Exception lastEx;
         ///<summary>
         ///Returns response frame from request<br />
         ///
@@ -55,17 +57,17 @@ namespace DSO.Utilities
                     {
                         WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), Scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, Scope.ShortBuffer, Scope.TimeoutTime);
+                    return ReturnFrame(ReturnType, Scope.ShortBuffer);
                 }
                 catch (InvalidDataFrameException ex)
                 {
                     try
                     {
-                        return ReturnFrame(ReturnType, Scope.LongBuffer, Scope.TimeoutTime);
+                        return ReturnFrame(ReturnType, Scope.LongBuffer);
                     }
                     catch (InvalidDataFrameException ex2)
                     {
-                         lastEx = ex.Message;
+                        lastEx = ex;
                     } 
                 }
             }
@@ -80,11 +82,11 @@ namespace DSO.Utilities
             //    stringData += data + ",";
             //}
             //stringData.Remove(stringData.Length - 1);
-            //throw new TimeoutException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx);
+            throw new FrameNotAcknowledgedException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx.StackTrace);
         }
 
 
-        private DataFrame ReturnFrame(Type FrameType, byte[] buffer, int timeoutTime)
+        private DataFrame ReturnFrame(Type FrameType, byte[] buffer)
         {
             if (FrameType == typeof(DataFrames.DSO068.CurrConfigDataFrame))
             {

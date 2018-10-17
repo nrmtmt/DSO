@@ -70,11 +70,6 @@ namespace DSO
             _serialPort.Write(buffer, offset, count);
         }
 
-        public void Write(DataFrame frame)
-        {
-            _serialPort.Write(frame.Data, 0, frame.Data.Count());
-        }
-
         public void Dispose()
         {
             Dispose(true);
