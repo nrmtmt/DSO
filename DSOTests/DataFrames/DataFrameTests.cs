@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using DSO.DataFrames.DSO068;
 using DSO.DataFrames;
 using DSO.DataFrames.DSO112;
+using DSO.Exceptions;
 
 namespace DSO.Tests
 {
@@ -29,43 +30,114 @@ namespace DSO.Tests
 
         [TestMethod()]
         public void CurrConfigDataFrameTest112A()
-        { 
-         DSO.DataFrames.DSO112.CurrConfigDataFrame config = new DataFrames.DSO112.CurrConfigDataFrame(Data());
+        {
+            bool result = false;
+            try
+            {
+                var data = Data();
+                DSO.DataFrames.DSO112.CurrConfigDataFrame config = new DataFrames.DSO112.CurrConfigDataFrame(Data());
+                result = true;
+            }
+            catch (InvalidDataFrameException)
+            {
+            }
+            Assert.AreEqual(true, result);
         }
+
+        [TestMethod()]
         public void CurrConfigDataFrameTest068()
         {
-            DSO.DataFrames.DSO068.CurrConfigDataFrame config = new DataFrames.DSO068.CurrConfigDataFrame(Data());
+            bool result = false;
+            try
+            {
+                var data = Data();
+                DSO.DataFrames.DSO068.CurrConfigDataFrame config = new DataFrames.DSO068.CurrConfigDataFrame(Data());
+                result = true;
+            }
+            catch (InvalidDataFrameException)
+            {
+            }
+            Assert.AreEqual(true, result);
         }
 
         [TestMethod()]
         public void CommandAcknowledgedDataFrameTest()
         {
-            var data = Data();
-           CommandAcknowledgedDataFrame config = new CommandAcknowledgedDataFrame(data);
+            bool result = false;
+            try
+            {
+                var data = Data();
+                CommandAcknowledgedDataFrame ack = new CommandAcknowledgedDataFrame(data);
+                result = true;
+            }
+            catch (InvalidDataFrameException)
+            { 
+            }
+            Assert.AreEqual(true, result);
         }
 
         [TestMethod()]
         public void CurrParamDataFrameTest()
         {
-            CurrParamDataFrame config = new CurrParamDataFrame(Data());
+            bool result = false;
+            try
+            {
+                var data = Data();
+                CurrParamDataFrame param = new CurrParamDataFrame(Data());
+                result = true;
+            }
+            catch (InvalidDataFrameException)
+            {
+            }
+            Assert.AreEqual(true, result);   
         }
 
         [TestMethod()]
         public void DataBlockDataFrameTest()
         {
-            DataBlockDataFrame config = new DataBlockDataFrame(Data());
+            bool result = false;
+            try
+            {
+                var data = Data();
+                DataBlockDataFrame block = new DataBlockDataFrame(Data());
+                result = true;
+            }
+            catch (InvalidDataFrameException)
+            {
+            }
+            Assert.AreEqual(true, result);
         }
+
         [TestMethod()]
         public void DataSampleDataFrameTest()
         {
-            DataSampleDataFrame config = new DataSampleDataFrame(Data());
+            bool result = false;
+            try
+            {
+                var data = Data();
+                DataSampleDataFrame sample = new DataSampleDataFrame(Data());
+                result = true;
+            }
+            catch (InvalidDataFrameException)
+            {
+            }
+            Assert.AreEqual(true, result);
         }
+
         [TestMethod()]
         public void ScopeReadyDataFrameTest()
         {
-            DSO.ScopeControlFrames.ScopeReady config = new ScopeControlFrames.ScopeReady(Data());
+            bool result = false;
+            try
+            {
+                var data = Data();
+                DSO.ScopeControlFrames.ScopeReady ready = new ScopeControlFrames.ScopeReady(Data());
+                result = true;
+            }
+            catch (InvalidDataFrameException)
+            {
+            }
+            Assert.AreEqual(true, result);
         }
-
-
     }
 }
