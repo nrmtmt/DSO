@@ -60,6 +60,8 @@ namespace DSO
     {
         public enum ScopeType
         {
+            DSO082 = 2,
+            DSO094 = 3,
             DSO068 = 4,
             DSO112A = 5,
         }
@@ -69,6 +71,17 @@ namespace DSO
             DC = 0,
             AC = 1,
             GND = 2,
+        }
+
+        public enum RecordLength
+        {
+            _256 = 256,
+            _512 = 512,
+            _1024 = 1024,
+            _2048 = 2048,
+            _4096 = 4096,
+            _8192 = 8192,
+            _16384 = 16384
         }
 
         public static  int[] RecLength = new int[] { 256, 512, 1024, 2048, 4096, 8192, 16384};

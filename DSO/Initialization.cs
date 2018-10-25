@@ -9,7 +9,7 @@ namespace DSO
     public static class Initialization
     {
         ///<summary>
-        ///Returns JyeScope object. If scope is not recognized, throws ScopeNotRecognizedException with information about returned scope type. If no scope is found, throws NullReferenceException. 
+        ///Returns JyeScope object. If scope is not recognized, throws ScopeNotRecognizedException with information about returned scope type. If no scope is found, throws ScopeNotDetectedException. 
         ///<param name="port">IStreamResource serial port</param>
         ///</summary>
         ///
@@ -27,6 +27,10 @@ namespace DSO
                     Config.ScopeType properScope = Ready.ScopeType;
                     switch (properScope)
                     {
+                        case Config.ScopeType.DSO082:
+                            throw new ScopeNotSupportedException($"Scope recognized but not supported. Returned scope type: {(int)Ready.ScopeType}.");
+                        case Config.ScopeType.DSO094:
+                            throw new ScopeNotSupportedException($"Scope recognized but not supported. Returned scope type: {(int)Ready.ScopeType}.");
                         case Config.ScopeType.DSO068:
                             return new DSO068.DSO068(port);
                         case Config.ScopeType.DSO112A:
@@ -40,7 +44,7 @@ namespace DSO
                     //try again
                 }
             }
-            throw new NullReferenceException("Scope not detected.");
+            throw new ScopeNotDetectedException("Scope not detected.");
         }
         private static byte[] InstReadBuffer(IStreamResource port)
         {
@@ -56,11 +60,5 @@ namespace DSO
             //Monitor.Exit(port);
             return true;
         }
-    }
-    public class ScopeNotRecognizedException : Exception
-    {
-        public ScopeNotRecognizedException() : base() { }
-        public ScopeNotRecognizedException(string message) : base(message) { }
-        public ScopeNotRecognizedException(string message, System.Exception inner) : base(message, inner) { }
     }
 }

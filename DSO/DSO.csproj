@@ -54,7 +54,9 @@
     <Compile Include="Exceptions\ParametersNotSetException.cs" />
     <Compile Include="Exceptions\FrameNotAcknowledgedException.cs" />
     <Compile Include="Exceptions\InvalidDataFrameException.cs" />
+    <Compile Include="Exceptions\ScopeNotDetectedException.cs" />
     <Compile Include="Exceptions\ScopeNotRecognizedException.cs" />
+    <Compile Include="Exceptions\ScopeNotSupportedException.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Interfaces\ICurrentConfig.cs" />
     <Compile Include="JyeScope.cs" />

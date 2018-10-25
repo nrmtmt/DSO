@@ -16,13 +16,12 @@ namespace DSO
         bool Disconnect();
         bool StartCapture();
         bool StopCapture();
-        long[] GetScaledData();
-        Dictionary<int, string> AvailableTimebaseSettings { get; }
-        Dictionary<int, string> AvailableCoupleSettings { get; }
-        Dictionary<int, string> AvailableTriggerSlopeSettings { get; }
-        Dictionary<int, string> AvailableSenitivitySettings { get; }
-        Dictionary<int, string> AvailableTriggerModeSettings { get; }
-        Dictionary<int, string> AvailableRecordLength { get; }
+        Dictionary<string, object> AvailableTimebaseSettings { get; }
+        Dictionary<string, object> AvailableCoupleSettings { get; }
+        Dictionary<string, object> AvailableTriggerSlopeSettings { get; }
+        Dictionary<string, object> AvailableSenitivitySettings { get; }
+        Dictionary<string, object> AvailableTriggerModeSettings { get; }
+        Dictionary<string, object> AvailableRecordLength { get; }
         string ScopeName { get; }
 
         int ReadDelay { get; set; }

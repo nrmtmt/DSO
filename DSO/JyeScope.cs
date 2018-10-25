@@ -26,9 +26,16 @@ namespace DSO
 
         protected int timeoutTime = 500; //time in with TimeoutException will be thrown. Should be 10 times more than readDelay (to look nice :))
         //back fields
-        private Dictionary<int, string> _AvailableTriggerModeSettings = new Dictionary<int, string>();
-        private Dictionary<int, string> _AvailableTriggerSlopeSettings = new Dictionary<int, string>();
-        private Dictionary<int, string> _AvailableCoupleSettings = new Dictionary<int, string>();
+        private Dictionary<string, object> _AvailableTriggerModeSettings = new Dictionary<string, object>();
+        private Dictionary<string, object> _AvailableTriggerSlopeSettings = new Dictionary<string, object>();
+        private Dictionary<string, object> _AvailableCoupleSettings = new Dictionary<string, object>();
+
+        private Dictionary<string, object> _AvailableRecordLength = new Dictionary<string, object>();
+        private Dictionary<string, object> _AvailableSensitivitySettings = new Dictionary<string, object>();
+        private Dictionary<string, object> _AvailableTimebaseSettings = new Dictionary<string, object>();
+
+
+
         private bool _startCapture = false;
         protected Config.ScopeType _scopeType;
         protected int _readDelay = 50; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
@@ -43,7 +50,7 @@ namespace DSO
         protected int _triggerSlope = 1;
         protected int _verticalPosition = 0;
         //End cold start parameters.
-        private ICurrentConfig ScopeConfig;
+        protected ICurrentConfig ScopeConfig;
         private bool _stopCapture = false;
         private float _voltPerDiv;
        
@@ -95,20 +102,8 @@ namespace DSO
         {
             SerialPort = port;
             port.DataReceivedEvent += Port_DataReceivedEvent;
-
-            foreach (var couple in (int[])Enum.GetValues(typeof(DSO.Config.Coupling)))
-            {
-                _AvailableCoupleSettings.Add(couple, Enum.GetName(typeof(DSO.Config.Coupling), couple));
-            }
-            foreach (var mode in (int[])Enum.GetValues(typeof(DSO.Config.TriggerMode)))
-            {
-                _AvailableTriggerModeSettings.Add(mode, Enum.GetName(typeof(DSO.Config.TriggerMode), mode));
-            }
-            foreach (var slope in (int[])Enum.GetValues(typeof(DSO.Config.Slope)))
-            {
-                _AvailableTriggerSlopeSettings.Add(slope, Enum.GetName(typeof(DSO.Config.Slope), slope));
-            }
         }
+
         //event raised when buffer contains more than 5 elements. RaisedBy ReadBuffer() method
         private void Port_DataReceivedEvent(object sender, EventArgs e)
         {
@@ -134,12 +129,21 @@ namespace DSO
             }
         }
 
+        //abstract methods
+
+        public abstract ICurrentConfig GetCurrentConfig();
+        protected abstract bool ChangeParamAcknowledged();
+
+        //end of abstract methods
+
+
         protected bool WriteFrame(DataFrame frame)
         {
             SerialPort.Write(frame.Data, 0, frame.Data.Count());
             return true;
         }
-        public abstract ICurrentConfig GetCurrentConfig();
+
+       
 
         private void _GetCurrentParameters()
         {
@@ -148,7 +152,7 @@ namespace DSO
                (typeof(ScopeControlFrames.GetParameters), typeof(CurrParamDataFrame), this);
             if(param != null)
             {
-                _recordLength = param.RecordLength;
+                _recordLength = (int)param.RecordLength;
                 _timeBase = (int)param.TBase;
                 _triggerPos = param.TriggerPosition;
                 _triggerLevel = param.TriggerLevel;
@@ -164,7 +168,7 @@ namespace DSO
 
         public CurrParamDataFrame GetCurrentParameters()
         {
-            var paramx = new CurrParamDataFrame((Config.VerticalSensitivity)_sensitivity, (Config.Timebase)_timeBase, (Config.Slope)_triggerSlope, (Config.TriggerMode)_triggerMode, (Config.Coupling)_couple, _triggerLevel, (byte)_triggerPos, _recordLength, _verticalPosition);
+            var paramx = new CurrParamDataFrame((Config.VerticalSensitivity)_sensitivity, (Config.Timebase)_timeBase, (Config.Slope)_triggerSlope, (Config.TriggerMode)_triggerMode, (Config.Coupling)_couple, _triggerLevel, (byte)_triggerPos, (Config.RecordLength)_recordLength, _verticalPosition);
             return paramx;
         }
 
@@ -189,15 +193,17 @@ namespace DSO
                                                            (DSO.Config.Coupling)_couple,
                                                            (byte)_triggerLevel,
                                                            (byte)_triggerPos,
-                                                           DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)],
-                                                           _verticalPosition);                
+                                                           (DSO.Config.RecordLength)_recordLength,                                                        
+                                                           _verticalPosition);
+                    //DSO.Config.RecLength[Array.IndexOf(DSO.Config.RecLength, _recordLength)],
+
                     WriteFrame(curParam);
                 } catch (Exception ex)
                 {
                     throw new ParametersNotSetException("Cannot set parameters. Error while writing or creating DataFrame: " + ex.Message);
                 }
 
-                if (!FrameAcknowledged())
+                if (!ChangeParamAcknowledged())
                 {
                     //do it again
                 }
@@ -248,7 +254,64 @@ namespace DSO
         {
             return _CurrentBuffer.ToArray();
         }
-        protected abstract bool FrameAcknowledged();
+
+        private void PopulateConfigDictionaries()
+        {
+            _AvailableCoupleSettings.Clear();
+            _AvailableRecordLength.Clear();
+            _AvailableSensitivitySettings.Clear();
+            _AvailableTimebaseSettings.Clear();
+            _AvailableTriggerModeSettings.Clear();
+            _AvailableTriggerSlopeSettings.Clear();
+
+            foreach (var length in Enum.GetValues(typeof(DSO.Config.RecordLength)))
+            {
+                if (((int)length >= ScopeConfig.MinRecordLength && (int)length <= ScopeConfig.MaxRecordLength))
+                {
+                    _AvailableRecordLength.Add(Convert.ToString((int)length), (DSO.Config.RecordLength)length);
+                }
+            }
+
+            foreach (var couple in Enum.GetValues(typeof(DSO.Config.Coupling)))
+            {
+                if (((int)couple >= (int)ScopeConfig.MinCoupleSetting && (int)couple <= (int)ScopeConfig.MaxCoupleSetting))
+                {
+                    _AvailableCoupleSettings.Add((Convert.ToString(couple)), (DSO.Config.Coupling)couple);
+                }
+            }
+
+            foreach (var sensitivity in Enum.GetValues(typeof(DSO.Config.VerticalSensitivity)))
+            {
+                if ((int)sensitivity >= (int)ScopeConfig.MinVerticalSensitivity && (int)sensitivity <= (int)ScopeConfig.MaxVerticalSensitivity)
+                {
+                    _AvailableSensitivitySettings.Add(Convert.ToString(sensitivity), (DSO.Config.VerticalSensitivity)sensitivity);
+                }
+            }
+
+            foreach (var timebase in Enum.GetValues(typeof(DSO.Config.Timebase)))
+            {
+                if ((int)timebase >= (int)ScopeConfig.MinTimebaseSetting && (int)timebase <= (int)ScopeConfig.MaxTimebaseSetting)
+                {
+                    _AvailableTimebaseSettings.Add(Convert.ToString(timebase), (DSO.Config.Timebase)timebase);
+                }
+            }
+
+            foreach (var mode in Enum.GetValues(typeof(DSO.Config.TriggerMode)))
+            {
+                if ((int)mode >= (int)ScopeConfig.MinTriggerModeSetting && (int)mode <= (int)ScopeConfig.MaxTriggerModeSetting)
+                {
+                    _AvailableTriggerModeSettings.Add(Convert.ToString(mode), (DSO.Config.TriggerMode)mode);
+                }
+            }
+
+            foreach (var slope in Enum.GetValues(typeof(DSO.Config.Slope)))
+            {
+                if ((int)slope >= (int)ScopeConfig.MinSlopeModeSetting && (int)slope <= (int)ScopeConfig.MaxSlopeModeSetting)
+                {
+                    _AvailableTriggerSlopeSettings.Add(Convert.ToString(slope), (DSO.Config.Slope)slope);
+                }
+            }
+        }
 
         //Interface implementation
         public bool Connect()
@@ -262,6 +325,7 @@ namespace DSO
                             (typeof(ScopeControlFrames.EnterUSBScopeMode), typeof(ScopeControlFrames.ScopeReady), this);
 
                      ScopeConfig = GetCurrentConfig();
+                    PopulateConfigDictionaries();
                      _GetCurrentParameters();
                      _scopeType = Ready.ScopeType;
                 return true;
@@ -299,15 +363,17 @@ namespace DSO
             return true;
         }
 
-        public long[] GetScaledData()
+
+        public Dictionary<string, object> AvailableTimebaseSettings
         {
-            throw new NotImplementedException();
+            get
+            {
+                return _AvailableTimebaseSettings;
+            }
+
         }
 
-
-        public abstract Dictionary<int, string> AvailableTimebaseSettings { get; }
-
-        public Dictionary<int, string> AvailableCoupleSettings
+        public Dictionary<string, object> AvailableCoupleSettings
         {
             get
             {
@@ -315,7 +381,7 @@ namespace DSO
             }
         }
 
-        public Dictionary<int, string> AvailableTriggerSlopeSettings
+        public Dictionary<string, object> AvailableTriggerSlopeSettings
         {
             get
             {
@@ -323,13 +389,27 @@ namespace DSO
             }
         }
 
-        public abstract Dictionary<int, string> AvailableSenitivitySettings { get; }
+        public Dictionary<string, object> AvailableSenitivitySettings
+        {
+            get
+            {
+                return _AvailableSensitivitySettings;
+            }
 
-        public Dictionary<int, string> AvailableTriggerModeSettings
+        }
+
+        public Dictionary<string, object> AvailableTriggerModeSettings
         {
             get
             {
                 return _AvailableTriggerModeSettings;
+            }
+        }
+        public Dictionary<string, object> AvailableRecordLength
+        {
+            get
+            {
+                return _AvailableRecordLength;
             }
         }
 
@@ -445,8 +525,6 @@ namespace DSO
                 SetCurrentParameters();
             }
         }
-
-        public abstract Dictionary<int, string> AvailableRecordLength { get; }
 
         public int RecordLength
         {

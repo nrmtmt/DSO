@@ -27,7 +27,7 @@ namespace DSO.DataFrames
         /// <param name="Couple">Couple</param> vPos
         /// <param name="vPos">Vertical position</param> vPos
         /// </summary>
-        public CurrParamDataFrame(Config.VerticalSensitivity VSensitivity, Config.Timebase TBase, Config.Slope Slope, Config.TriggerMode Trigger, Config.Coupling Couple, int trigLevel, byte trigPos, int recLength, int vPos)
+        public CurrParamDataFrame(Config.VerticalSensitivity VSensitivity, Config.Timebase TBase, Config.Slope Slope, Config.TriggerMode Trigger, Config.Coupling Couple, int trigLevel, byte trigPos, Config.RecordLength recLength, int vPos)
         {
             byte[] data = new byte[53];
             data[0] = 0xFE; data[1] = 0xC0; data[2] = 0x34; data[4] = 0x22;
@@ -46,7 +46,7 @@ namespace DSO.DataFrames
 
             data[21] = trigPos;
 
-            bytes = BitConverter.GetBytes(recLength);
+            bytes = BitConverter.GetBytes((int)recLength);
             data[25] = bytes[0]; data[26] = bytes[1];
 
             //data[27] = bytes[2]; data[28] = bytes[3];
@@ -138,12 +138,12 @@ namespace DSO.DataFrames
         {
             get { return Data[21]; }
         }
-        public int RecordLength
+        public Config.Timebase RecordLength
         {
             get
             {
                 byte[] bytes = { Data[25], Data[26], Data[27], Data[28] };
-                return bytes.ToInt();
+                return (Config.Timebase)bytes.ToInt(); 
             }
         }
         public override bool Equals(object obj)
