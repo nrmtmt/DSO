@@ -16,6 +16,8 @@ namespace DSO.Interfaces
 
         bool CoupleChangeableByHost { get; }
 
+        bool VerticalPositionChangeableByHost { get; }
+
         Config.VerticalSensitivity MaxVerticalSensitivity { get; }
 
         Config.VerticalSensitivity MinVerticalSensitivity { get; }

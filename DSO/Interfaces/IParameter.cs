@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DSO.Interfaces
 {
-   public interface IParameter<out T>
+   public interface IParameter<T>
     {
         string ParameterName { get; }
         string ParameterValue { get; }

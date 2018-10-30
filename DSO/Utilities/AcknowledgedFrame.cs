@@ -57,7 +57,7 @@ namespace DSO.Utilities
                     {
                         WriteFrame(new DataFrames.ScopeControlDataFrames.EnterUSBScopeMode(), Scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, Scope.LongBuffer);
+                    return ReturnFrame(ReturnType, Scope.ShortBuffer);
                 }
                 catch (InvalidDataFrameException ex)
                 {

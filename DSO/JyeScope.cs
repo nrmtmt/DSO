@@ -51,17 +51,17 @@ namespace DSO
 
         private bool _startCapture = false;
         protected Config.ScopeType _scopeType;
-        protected int _readDelay = 50; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
+        protected int _readDelay = 100; //Delay between write and read from serial port. DSO068 allows less readDelay than DSO112, both should work in this settings. Raise in case of errors.
                                       //Cold start parameters. Shoud be overwritten at first start.
        
         protected int _triggerPos = 50;
-        protected int _triggerLevel = 150;
+        protected int _triggerLevel = 127;
         protected int _verticalPosition = 0;
 
         //End cold start parameters.
         protected ICurrentConfig ScopeConfig;
         private bool _stopCapture = false;
-        private float _voltPerDiv;
+        protected float _voltPerDiv;
        
 
         private Queue<byte> _DataBuffer = new Queue<byte>();
@@ -145,9 +145,9 @@ namespace DSO
                 _DataBuffer.Enqueue(data);
             }
 
-            if (_DataBuffer.Count() > (int)_RecordLength.GetParameter * 3 && ScopeConfig != null)
+            if (_DataBuffer.Count() > (int)_RecordLength.GetParameter && ScopeConfig != null)
             {
-                var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, (int)_RecordLength.GetParameter, _verticalPosition);
+                var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, (int)_RecordLength.GetParameter, _verticalPosition, ScopeConfig.VerticalPositionChangeableByHost);
                 if ( measurements!= null)
                 {
                     NewDataInBuffer(measurements, null);
@@ -203,8 +203,10 @@ namespace DSO
                 _voltPerDiv = param.VoltagePerDiv;
                 _triggerPos = param.TriggerPosition;
                 _triggerLevel = param.TriggerLevel;
+
                 return param;
 
+               
             } catch (FrameNotAcknowledgedException ex)
             {
                 return null;
@@ -223,7 +225,7 @@ namespace DSO
                                                           _TriggerSlope.GetParameter,
                                                           _TriggerMode.GetParameter,
                                                           _Couple.GetParameter,
-                                                          (byte)_triggerLevel,
+                                                          _triggerLevel,
                                                           (byte)_triggerPos,
                                                           _RecordLength.GetParameter,
                                                           _verticalPosition);
@@ -518,11 +520,11 @@ namespace DSO
             }
         }
 
-        public float TriggerLevel
+        public virtual float TriggerLevel
         {
             get
             {
-                var output = Measurements.GetScaledData(_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv, _verticalPosition);
+                var output = Measurements.GetScaledData(_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv, _verticalPosition, ScopeConfig.VerticalPositionChangeableByHost);
                 return output;
             }
 

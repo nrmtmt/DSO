@@ -27,7 +27,7 @@ namespace DSO.DSO068
                         (typeof(DataFrames.ScopeControlDataFrames.GetConfig), typeof(CurrConfigDataFrame), this);
             return conf;
         }
-
+      
         protected override bool ChangeParamAcknowledged()
         {
             var curParam = Get_CurParamDataFrame_From_Current_Object_State();

@@ -17,10 +17,10 @@ namespace DSO
         {
             var stopwatch = new Stopwatch();
             stopwatch.Restart();
-            while (stopwatch.ElapsedMilliseconds < 500)
+            while (stopwatch.ElapsedMilliseconds < 2000)
             {
                 WriteFrame(new DataFrames.ScopeControlDataFrames.EnterUSBScopeMode(), port);
-                System.Threading.Thread.Sleep(50);
+                System.Threading.Thread.Sleep(100);
                 try
                 {
                     DataFrames.ScopeControlDataFrames.ScopeReady Ready = new DataFrames.ScopeControlDataFrames.ScopeReady(InstReadBuffer(port));
@@ -55,9 +55,7 @@ namespace DSO
         }
         private static bool WriteFrame(DataFrame frame, IStreamResource port)
         {
-            //Monitor.Enter(port);
             port.Write(frame.Data, 0, frame.Data.Count());
-            //Monitor.Exit(port);
             return true;
         }
     }

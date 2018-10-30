@@ -21,7 +21,7 @@ namespace DSO.Utilities
         ///<param name="recordLength">Current scope record length</param>
         ///</summary>
         ///
-        public static float[] GetFromBuffer (byte[] data, float voltsPerDiv, int pointsPerDiv, int recordLength, int vertPos)
+        public static float[] GetFromBuffer (byte[] data, float voltsPerDiv, int pointsPerDiv, int recordLength, int vertPos, bool VposChangeable)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace DSO.Utilities
                     }
                     if (rawData.Count() == recordLength- 5)
                     {       
-                        return getScaledMeasurements(rawData, voltsPerDiv, pointsPerDiv, vertPos) ?? null;
+                        return getScaledMeasurements(rawData, voltsPerDiv, pointsPerDiv, vertPos, VposChangeable) ?? null;
                     }
                 }
             }
@@ -52,7 +52,7 @@ namespace DSO.Utilities
                             rawData[i - 5] = DataFrame.Data[i];
                         }
 
-                        return getScaledMeasurements(rawData, voltsPerDiv, pointsPerDiv, vertPos) ?? null;
+                        return getScaledMeasurements(rawData, voltsPerDiv, pointsPerDiv, vertPos, VposChangeable) ?? null;
                     }
                 }
                 catch (InvalidDataFrameException ex2)
@@ -63,13 +63,13 @@ namespace DSO.Utilities
             return null;
         }
 
-        private static float[] getScaledMeasurements(byte[] data, float voltsPerDiv, int pointsPerDiv, int vertPos)
+        private static float[] getScaledMeasurements(byte[] data, float voltsPerDiv, int pointsPerDiv, int vertPos, bool VposChangeable)
         {
             float[] scaled = new float[data.Count()];
 
             for (int i = 0; i < data.Count(); i++)
             {
-                scaled[i] = (GetScaledData(data[i], voltsPerDiv, pointsPerDiv, vertPos));
+                scaled[i] = (GetScaledData(data[i], voltsPerDiv, pointsPerDiv, vertPos, VposChangeable));
             }
             return scaled;
         }
@@ -82,16 +82,30 @@ namespace DSO.Utilities
         ///<param name="recordLength">Current scope record length</param>
         ///</summary>
         ///
-        public static float GetScaledData(int data, float voltsPerDiv, int pointsPerDiv, int vertPos) ///to be changed
+        public static float GetScaledData(int data, float voltsPerDiv, int pointsPerDiv, int vertPos, bool VposChangeable) ///to be changed
         {
-            if (data < byte.MaxValue)
+            if (VposChangeable)
             {
-                return ((data - (128)) * (voltsPerDiv / pointsPerDiv));
-            }
-            else
+                if (data < byte.MaxValue)
+                {
+                    return ((data - (128) - (vertPos)) * (voltsPerDiv / pointsPerDiv));
+                }
+                else
+                {
+                    return 0;
+                }
+            }else
             {
-                return 0;
+                if (data < byte.MaxValue)
+                {
+                    return ((data - (128)) * (voltsPerDiv / pointsPerDiv));
+                }
+                else
+                {
+                    return 0;
+                }
             }
+           
         }
         ///<summary>
         ///Return raw data from real one. If data is not valid, 0 is returned. 
@@ -100,11 +114,12 @@ namespace DSO.Utilities
         ///<param name="pointsPerDiv">Points per division (from scope Config class)</param>
         ///</summary>
         ///
-        public static byte GetRawData(float scaled, float voltsPerDiv, int pointsPerDiv)   ///to be changed
+        public static int GetRawData(float scaled, float voltsPerDiv, int pointsPerDiv)   ///to be changed
         {
+
             try
             {
-                return Convert.ToByte((scaled / (voltsPerDiv / pointsPerDiv)) + 128);
+                return (int)(scaled / (voltsPerDiv / pointsPerDiv)) + 128;
 
             }
             catch (Exception ex)

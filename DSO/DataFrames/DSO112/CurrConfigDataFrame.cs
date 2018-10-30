@@ -19,6 +19,14 @@ namespace DSO.DataFrames.DSO112
             }
         }
 
+        public bool VerticalPositionChangeableByHost
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public bool Ch1Present
         {
             get

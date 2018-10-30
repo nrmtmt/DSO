@@ -20,10 +20,33 @@ namespace DSO.DSO112
 
         public override ICurrentConfig GetCurrentConfig()
         {
+            try
+            {
                 var conf = (CurrConfigDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
-                        (typeof(DataFrames.ScopeControlDataFrames.GetConfig), typeof(CurrConfigDataFrame), this);
+                       (typeof(DataFrames.ScopeControlDataFrames.GetConfig), typeof(CurrConfigDataFrame), this);
 
                 return conf;
+            }
+            catch (FrameNotAcknowledgedException)
+            {
+                return GetCurrentConfig();
+            }
+               
+        }
+
+        public override float TriggerLevel
+        {
+            get
+            {
+                  var output = Measurements.GetScaledData(_triggerLevel + 128, base._voltPerDiv, ScopeConfig.PointsPerDiv, _verticalPosition, base.ScopeConfig.VerticalPositionChangeableByHost);
+                  return output;
+            }
+
+            set
+            {
+                _triggerLevel = (Measurements.GetRawData(value, _voltPerDiv, ScopeConfig.PointsPerDiv))-128;
+                SetCurrentParameters();
+            }
         }
 
         protected override bool ChangeParamAcknowledged()
