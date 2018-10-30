@@ -131,7 +131,7 @@ namespace DSO.Tests
             try
             {
                 var data = Data();
-                DSO.ScopeControlFrames.ScopeReady ready = new ScopeControlFrames.ScopeReady(Data());
+                DataFrames.ScopeControlDataFrames.ScopeReady ready = new DataFrames.ScopeControlDataFrames.ScopeReady(Data());
                 result = true;
             }
             catch (InvalidDataFrameException)

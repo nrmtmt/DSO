@@ -49,6 +49,7 @@
     <Compile Include="DataFrames\DSO112\CommandAcknowledgedDataFrame.cs" />
     <Compile Include="DataFrames\DSO112\CurrConfigDataFrame.cs" />
     <Compile Include="DataFrames\DSO112\SpecialCommandDataFrame.cs" />
+    <Compile Include="Parameters\Params.cs" />
     <Compile Include="DSO068\DSO068.cs" />
     <Compile Include="DSO112\DSO112.cs" />
     <Compile Include="Exceptions\ParametersNotSetException.cs" />
@@ -59,12 +60,13 @@
     <Compile Include="Exceptions\ScopeNotSupportedException.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Interfaces\ICurrentConfig.cs" />
+    <Compile Include="Interfaces\IParameter.cs" />
     <Compile Include="JyeScope.cs" />
     <Compile Include="DataFrames\DataFrame.cs" />
     <Compile Include="Interfaces\IScope.cs" />
     <Compile Include="Interfaces\IStreamResource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScopeControlFrames\ScopeControl.cs" />
+    <Compile Include="DataFrames\ScopeControlFrames\ScopeControl.cs" />
     <Compile Include="Utilities\AcknowledgedFrame.cs" />
     <Compile Include="Utilities\Measurements.cs" />
     <Compile Include="Utilities\SerialPortAdapter.cs" />

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO.ScopeControlFrames
+namespace DSO.DataFrames.ScopeControlDataFrames
 {
     /**what jyelab does:
      * write 

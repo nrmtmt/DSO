@@ -1,6 +1,6 @@
 ﻿using DSO.DataFrames;
 using DSO.Exceptions;
-using DSO.ScopeControlFrames;
+using DSO.DataFrames.ScopeControlDataFrames;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -15,11 +15,11 @@ namespace DSO.Utilities
        Example:
 
                       //cast return to expected frame                     
-          var Ready = (ScopeControlFrames.ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
+          var Ready = (DataFrames.ScopeControlDataFrames..ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
                                 //TypeOf Request data frame (in this case request to enter USB Mode)                        
-                            (typeof(ScopeControlFrames.EnterUSBScopeMode), 
+                            (typeof(DataFrames.ScopeControlDataFrames..EnterUSBScopeMode), 
                                       //TypeOf Response (and returned) data frame (in this case response should be ScopeReady data frame) 
-                                    typeof(ScopeControlFrames.ScopeReady), this);
+                                    typeof(DataFrames.ScopeControlDataFrames..ScopeReady), this);
     **/
     ///<summary>
     /// Most commands has their return frames. For example when you send to device "GetParam" data frame, you expect CurrParamDataFrame in response. 
@@ -47,34 +47,27 @@ namespace DSO.Utilities
                 {
                     if (SendType == typeof(GetParameters))
                     {
-                        WriteFrame(new ScopeControlFrames.GetParameters(), Scope.SerialPort);
+                        WriteFrame(new DataFrames.ScopeControlDataFrames.GetParameters(), Scope.SerialPort);
                     }
                     else if(SendType == typeof(GetConfig))
                     {
-                        WriteFrame(new ScopeControlFrames.GetConfig(), Scope.SerialPort);
+                        WriteFrame(new DataFrames.ScopeControlDataFrames.GetConfig(), Scope.SerialPort);
                     }
                     else if (SendType == typeof(EnterUSBScopeMode))
                     {
-                        WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), Scope.SerialPort);
+                        WriteFrame(new DataFrames.ScopeControlDataFrames.EnterUSBScopeMode(), Scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, Scope.ShortBuffer);
+                    return ReturnFrame(ReturnType, Scope.LongBuffer);
                 }
                 catch (InvalidDataFrameException ex)
                 {
-                    try
-                    {
-                        return ReturnFrame(ReturnType, Scope.LongBuffer);
-                    }
-                    catch (InvalidDataFrameException ex2)
-                    {
-                        lastEx = ex;
-                    } 
+                    lastEx = ex;
                 }
             }
 
             //return ReturnFrame(ReturnType, Scope.ShortBuffer, Scope.TimeoutTime);
-            //GetAcknowledgedFrame(SendType, ReturnType, Scope);
-            return null;
+            // GetAcknowledgedFrame(SendType, ReturnType, Scope);
+            //return null;
 
             //stringData = "";
             //foreach (var data in scope.ShortBuffer)
@@ -113,9 +106,9 @@ namespace DSO.Utilities
                 DataSampleDataFrame CurrData = new DataSampleDataFrame(buffer);
                 return CurrData;
             }
-            else if (FrameType == typeof(ScopeControlFrames.ScopeReady))
+            else if (FrameType == typeof(DataFrames.ScopeControlDataFrames.ScopeReady))
             {
-                ScopeControlFrames.ScopeReady ready = new ScopeControlFrames.ScopeReady(buffer);
+                DataFrames.ScopeControlDataFrames.ScopeReady ready = new DataFrames.ScopeControlDataFrames.ScopeReady(buffer);
                 return ready;
             }
             else

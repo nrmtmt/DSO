@@ -19,11 +19,11 @@ namespace DSO
             stopwatch.Restart();
             while (stopwatch.ElapsedMilliseconds < 500)
             {
-                WriteFrame(new ScopeControlFrames.EnterUSBScopeMode(), port);
+                WriteFrame(new DataFrames.ScopeControlDataFrames.EnterUSBScopeMode(), port);
                 System.Threading.Thread.Sleep(50);
                 try
                 {
-                    ScopeControlFrames.ScopeReady Ready = new ScopeControlFrames.ScopeReady(InstReadBuffer(port));
+                    DataFrames.ScopeControlDataFrames.ScopeReady Ready = new DataFrames.ScopeControlDataFrames.ScopeReady(InstReadBuffer(port));
                     Config.ScopeType properScope = Ready.ScopeType;
                     switch (properScope)
                     {

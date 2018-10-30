@@ -24,26 +24,26 @@ namespace DSO.DSO068
         public override ICurrentConfig GetCurrentConfig()
         {
             var conf = (CurrConfigDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
-                        (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);
+                        (typeof(DataFrames.ScopeControlDataFrames.GetConfig), typeof(CurrConfigDataFrame), this);
             return conf;
         }
 
         protected override bool ChangeParamAcknowledged()
         {
+            var curParam = Get_CurParamDataFrame_From_Current_Object_State();
+            CurrParamDataFrame curParam2 = null;
 
-            var curParam = new CurrParamDataFrame((DSO.Config.VerticalSensitivity)_sensitivity,
-                                                            (DSO.Config.Timebase)_timeBase,
-                                                            (DSO.Config.Slope)_triggerSlope,
-                                                            (DSO.Config.TriggerMode)_triggerMode,
-                                                            (DSO.Config.Coupling)_couple,
-                                                            (byte)_triggerLevel,
-                                                            (byte)_triggerPos,
-                                                            (DSO.Config.RecordLength)_recordLength,
-                                                            _verticalPosition);
-            var curParam2 = GetCurrentParameters();
+            try
+            {
+                curParam2 = (CurrParamDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
+                (typeof(DataFrames.ScopeControlDataFrames.GetParameters), typeof(CurrParamDataFrame), this);
+            }catch (DSO.Exceptions.FrameNotAcknowledgedException)
+            {
+                return false;
+            }
+         
             if (!curParam.Equals(curParam2))
             {
-
                 return false;
             }
             else

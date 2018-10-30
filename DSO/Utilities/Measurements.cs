@@ -34,7 +34,7 @@ namespace DSO.Utilities
                         rawData[i - 5] = DataFrame.Data[i];
                     }
                     if (rawData.Count() == recordLength- 5)
-                    {                       
+                    {       
                         return getScaledMeasurements(rawData, voltsPerDiv, pointsPerDiv, vertPos) ?? null;
                     }
                 }

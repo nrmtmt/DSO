@@ -4,35 +4,37 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
+using DSO.Interfaces;
+using DSO.Parameters;
 
 namespace DSO
 {
     public interface IScope
     {
         event EventHandler NewDataInBuffer;
-        IScope Create();
         bool Destroy();
         bool Connect();
         bool Disconnect();
         bool StartCapture();
         bool StopCapture();
-        Dictionary<string, object> AvailableTimebaseSettings { get; }
-        Dictionary<string, object> AvailableCoupleSettings { get; }
-        Dictionary<string, object> AvailableTriggerSlopeSettings { get; }
-        Dictionary<string, object> AvailableSenitivitySettings { get; }
-        Dictionary<string, object> AvailableTriggerModeSettings { get; }
-        Dictionary<string, object> AvailableRecordLength { get; }
         string ScopeName { get; }
+        IParameter<float> CurrentVoltageLimit { get; }
 
-        int ReadDelay { get; set; }
-        int TimeBase { get; set; }
-        int TriggerPos { get; set; }
+        List<IParameter<Config.Timebase>> AvailableTimebaseSettings { get; }
+        List<IParameter<Config.Coupling>> AvailableCoupleSettings { get; }
+        List<IParameter<Config.Slope>> AvailableTriggerSlopeSettings { get; }
+        List<IParameter<Config.VerticalSensitivity>> AvailableSenitivitySettings { get; }
+        List<IParameter<Config.TriggerMode>> AvailableTriggerModeSettings { get; }
+        List<IParameter<Config.RecordLength>> AvailableRecordLength { get; }
+
+
+        IParameter<Config.Timebase> TimeBase { get; set; }
+        IParameter<Config.Coupling> Couple { get; set; }
+        IParameter<Config.Slope> TriggerSlope { get; set; }
+        IParameter<Config.VerticalSensitivity> Sensitivity { get; set; }
+        IParameter<Config.TriggerMode> TriggerMode { get; set; }
+        IParameter<Config.RecordLength> RecordLength { get; set; }
+        int TriggerPosition { get; set; }
         float TriggerLevel { get; set; }
-        int Sensitivity { get; set; }
-        int TriggerMode { get; set; }
-        int Couple { get; set; }
-        int TriggerSlope { get; set; }
-        int RecordLength { get; set; }
-        int VerticalPosition { get; set; }
     }
 }

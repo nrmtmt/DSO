@@ -84,8 +84,6 @@ namespace DSO
             _16384 = 16384
         }
 
-        public static  int[] RecLength = new int[] { 256, 512, 1024, 2048, 4096, 8192, 16384};
-       
         public enum Slope
         {
             Falling = 0,
@@ -97,6 +95,14 @@ namespace DSO
             Auto = 0,
             Normal = 1,
             Single = 2,
+        }
+
+        public enum TriggerSource
+        {
+            Internal = 0,
+            External = 1,
+            CH_A = 2,
+            CH_B = 3,
         }
 
         public enum Timebase
@@ -140,6 +146,7 @@ namespace DSO
             div10ns = 36,
             div5ns = 37
         }
+
         public enum VerticalSensitivity
         {
             divCustom = 0,
@@ -165,12 +172,14 @@ namespace DSO
             AutoState = 0,
             ManualState = 1,
         }
+
         public enum DataLoggerRefVoltage
         {
             AREF = 0,
             AVCC = 1,
             INTERNAL = 2      
         }
+
         public enum DataLoggerDataAdjustment
         {
             RightAdjustment = 0,

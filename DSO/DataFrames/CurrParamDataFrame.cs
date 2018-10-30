@@ -41,6 +41,7 @@ namespace DSO.DataFrames
             data[17] = (byte)Trigger;
             data[18] = (byte)Slope;
 
+
             bytes = BitConverter.GetBytes(trigLevel);
             data[19] = bytes[0]; data[20] = bytes[1];
 
@@ -48,8 +49,8 @@ namespace DSO.DataFrames
 
             bytes = BitConverter.GetBytes((int)recLength);
             data[25] = bytes[0]; data[26] = bytes[1];
+            data[27] = bytes[2]; data[28] = bytes[3];
 
-            //data[27] = bytes[2]; data[28] = bytes[3];
             base.Generate(data);
             string output = data.ToCommaDelimitedString();
         }
@@ -138,12 +139,12 @@ namespace DSO.DataFrames
         {
             get { return Data[21]; }
         }
-        public Config.Timebase RecordLength
+        public Config.RecordLength RecordLength
         {
             get
             {
                 byte[] bytes = { Data[25], Data[26], Data[27], Data[28] };
-                return (Config.Timebase)bytes.ToInt(); 
+                return (Config.RecordLength)bytes.ToInt(); 
             }
         }
         public override bool Equals(object obj)

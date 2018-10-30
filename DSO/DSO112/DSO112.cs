@@ -21,14 +21,15 @@ namespace DSO.DSO112
         public override ICurrentConfig GetCurrentConfig()
         {
                 var conf = (CurrConfigDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
-                        (typeof(ScopeControlFrames.GetConfig), typeof(CurrConfigDataFrame), this);
+                        (typeof(DataFrames.ScopeControlDataFrames.GetConfig), typeof(CurrConfigDataFrame), this);
 
                 return conf;
         }
 
         protected override bool ChangeParamAcknowledged()
         {
-            var tempBuff = _CurrentBuffer;
+            Queue<byte> tempBuff = new Queue<byte>();
+            tempBuff = _CurrentBuffer;
             try
             {
                 var cmd = new DataFrames.DSO112.CommandAcknowledgedDataFrame(tempBuff.ToArray());
