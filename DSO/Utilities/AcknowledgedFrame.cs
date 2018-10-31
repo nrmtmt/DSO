@@ -59,11 +59,11 @@ namespace DSO.Utilities
                     }
                     try
                     {
-                        return ReturnFrame(ReturnType, Scope.ShortBuffer);
+                        return ReturnFrame(ReturnType, Scope.LongBuffer);
 
                     }catch(Exception)
                     {
-                        return ReturnFrame(ReturnType, Scope.LongBuffer);
+                        return ReturnFrame(ReturnType, Scope.ShortBuffer);
                     }
                    
                 }

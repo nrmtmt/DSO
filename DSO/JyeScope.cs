@@ -19,14 +19,238 @@ namespace DSO
 {
     public abstract class JyeScope : DSO.IScope
     {
+        //Interface implementation
+
         //interface event. New measurements are measured by device. At this moment this delegate is generic.
         public event System.EventHandler NewDataInBuffer = delegate { };
+        public bool Connect()
+        {
+
+            Thread BackgroundReader = new Thread(ReadBuffer);
+            BackgroundReader.IsBackground = true;
+            BackgroundReader.Start();
+
+
+            var Ready = (DataFrames.ScopeControlDataFrames.ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
+                        (typeof(DataFrames.ScopeControlDataFrames.EnterUSBScopeMode), typeof(DataFrames.ScopeControlDataFrames.ScopeReady), this);
+
+            ScopeConfig = GetCurrentConfig();
+            PopulateConfigDictionaries();
+            _GetCurrentParameters();
+            _scopeType = Ready.ScopeType;
+            return true;
+        }
+
+        public bool Disconnect()
+        {
+            WriteFrame(new DataFrames.ScopeControlDataFrames.ExitUSBScopeMode());
+            _stopCapture = true;
+            return true;
+        }
+
+        public bool Destroy()
+        {
+            Disconnect();
+            SerialPort.Dispose();
+            return true;
+        }
+
+        public bool StartCapture()
+        {
+            WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.EnterUSBScopeMode());
+            return true;
+        }
+
+        public bool StopCapture()
+        {
+            WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.ExitUSBScopeMode());
+            return true;
+        }
+
+        public List<IParameter<Config.Timebase>> AvailableTimebaseSettings
+        {
+            get
+            {
+                return _AvailableTimebaseSettings;
+            }
+        }
+
+        public List<IParameter<Config.Coupling>> AvailableCoupleSettings
+        {
+            get
+            {
+                return _AvailableCoupleSettings;
+            }
+        }
+
+        public List<IParameter<Config.Slope>> AvailableTriggerSlopeSettings
+        {
+            get
+            {
+                return _AvailableTriggerSlopeSettings;
+            }
+        }
+
+        public List<IParameter<Config.VerticalSensitivity>> AvailableSenitivitySettings
+        {
+            get
+            {
+                return _AvailableSensitivitySettings;
+            }
+        }
+
+        public List<IParameter<Config.TriggerMode>> AvailableTriggerModeSettings
+        {
+            get
+            {
+                return _AvailableTriggerModeSettings;
+            }
+        }
+        public List<IParameter<Config.RecordLength>> AvailableRecordLength
+        {
+            get
+            {
+                return _AvailableRecordLength;
+            }
+        }
+
+        public IParameter<Config.Timebase> TimeBase
+        {
+            get
+            {
+                return _TimeBase;
+            }
+
+            set
+            {
+                _TimeBase = value;
+                SetCurrentParameters();
+            }
+        }
+
+        public int TriggerPosition
+        {
+            get
+            {
+                return _triggerPos;
+            }
+
+            set
+            {
+                _triggerPos = value;
+                SetCurrentParameters();
+            }
+        }
+
+        public virtual float TriggerLevel
+        {
+            get
+            {
+                var output = Measurements.GetScaledData(_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv, _verticalPosition, ScopeConfig.VerticalPositionChangeableByHost);
+                return output;
+            }
+
+            set
+            {
+                _triggerLevel = Measurements.GetRawData((float)value, _voltPerDiv, ScopeConfig.PointsPerDiv);
+                SetCurrentParameters();
+            }
+        }
+
+        public IParameter<Config.VerticalSensitivity> Sensitivity
+        {
+            get
+            {
+                return _Sensitivity;
+            }
+
+            set
+            {
+                _Sensitivity = value;
+                SetCurrentParameters();
+            }
+        }
+
+        public IParameter<Config.TriggerMode> TriggerMode
+        {
+            get
+            {
+                return _TriggerMode;
+            }
+
+            set
+            {
+                _TriggerMode = value;
+                SetCurrentParameters();
+            }
+        }
+
+        public IParameter<Config.Coupling> Couple
+        {
+            get
+            {
+                return _Couple;
+            }
+
+            set
+            {
+                _Couple = value;
+                SetCurrentParameters();
+            }
+        }
+
+        public IParameter<Config.Slope> TriggerSlope
+        {
+            get
+            {
+                return _TriggerSlope;
+            }
+
+            set
+            {
+                _TriggerSlope = value;
+                SetCurrentParameters();
+            }
+        }
+
+        public IParameter<Config.RecordLength> RecordLength
+        {
+            get
+            {
+                return _RecordLength;
+            }
+
+            set
+            {
+                _RecordLength = value;
+                SetCurrentParameters();
+
+            }
+        }
+        public string ScopeName
+        {
+            get
+            {
+                return Convert.ToString(_scopeType);
+            }
+        }
+
+        public IParameter<float> CurrentVoltageLimit
+        {
+            get
+            {
+                return new Parameter<float>("Voltage limit", Convert.ToString(_voltPerDiv * 6), "V", true, _voltPerDiv * 6);
+            }
+        }
+        //End of interface implementaion
+
+
         //info event (for debug), also generic delegate.
         public event System.EventHandler Info = delegate { };
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
 
-        protected int timeoutTime = 1000; //time in with TimeoutException will be thrown. Should be 20 times more than readDelay (to look nice :))
+        protected int timeoutTime = 500; //time in with TimeoutException will be thrown
         //back fields
 
         private IParameter<Config.Timebase> _TimeBase;
@@ -111,7 +335,7 @@ namespace DSO
             set
             {
                 _readDelay = value;
-                timeoutTime = _readDelay * 20;
+                timeoutTime = _readDelay * 5;
             }
         }
 
@@ -152,7 +376,7 @@ namespace DSO
                 {
                     NewDataInBuffer(measurements, null);
                 }
-
+                _GetCurrentParameters();
                 foreach (byte data in _CurrentBuffer)
                 {
                     _DataBuffer.Dequeue();
@@ -392,231 +616,6 @@ namespace DSO
                     Parameter<Config.Slope> TriggerSlope = new Parameter<Config.Slope>(name, value, unit, false, (DSO.Config.Slope)slope);
                     _AvailableTriggerSlopeSettings.Add(TriggerSlope);
                 }
-            }
-        }
-      
-
-        //Interface implementation
-        public bool Connect()
-        {
-
-            Thread BackgroundReader = new Thread(ReadBuffer);
-            BackgroundReader.IsBackground = true;
-            BackgroundReader.Start();
-
-          
-                var Ready = (DataFrames.ScopeControlDataFrames.ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
-                            (typeof(DataFrames.ScopeControlDataFrames.EnterUSBScopeMode), typeof(DataFrames.ScopeControlDataFrames.ScopeReady), this);
-
-                     ScopeConfig = GetCurrentConfig();
-                     PopulateConfigDictionaries();
-                     _GetCurrentParameters();
-                     _scopeType = Ready.ScopeType;
-                return true;
-        }
-
-        public bool Disconnect()
-        {
-            WriteFrame(new DataFrames.ScopeControlDataFrames.ExitUSBScopeMode());
-            _stopCapture = true;
-            return true;
-        }
-
-        public bool Destroy()
-        {
-            Disconnect();
-            SerialPort.Dispose();
-            return true;
-        }
-
-        public bool StartCapture()
-        {
-            WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.EnterUSBScopeMode());
-            return true;
-        }
-
-        public bool StopCapture()
-        {
-            WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.ExitUSBScopeMode());
-            return true;
-        }
-
-
-        public List<IParameter<Config.Timebase>> AvailableTimebaseSettings
-        {
-            get
-            {
-                return _AvailableTimebaseSettings;
-            }
-
-        }
-
-        public List<IParameter<Config.Coupling>> AvailableCoupleSettings
-        {
-            get
-            {
-                return _AvailableCoupleSettings;
-            }
-        }
-
-        public List<IParameter<Config.Slope>> AvailableTriggerSlopeSettings
-        {
-            get
-            {
-                return _AvailableTriggerSlopeSettings;
-            }
-        }
-
-        public List<IParameter<Config.VerticalSensitivity>> AvailableSenitivitySettings
-        {
-            get
-            {
-                return _AvailableSensitivitySettings;
-            }
-
-        }
-
-        public List<IParameter<Config.TriggerMode>> AvailableTriggerModeSettings
-        {
-            get
-            {
-                return _AvailableTriggerModeSettings;
-            }
-        }
-        public List<IParameter<Config.RecordLength>> AvailableRecordLength
-        {
-            get
-            {
-                return _AvailableRecordLength;
-            }
-        }
-
-        public IParameter<Config.Timebase> TimeBase
-        {
-            get
-            {
-                return _TimeBase;
-            }
-
-            set
-            {
-                _TimeBase = value;
-                SetCurrentParameters();
-            }
-        }
-
-        public int TriggerPosition
-{
-            get
-            {
-                return _triggerPos;
-            }
-
-            set
-            {
-                _triggerPos = value;
-                SetCurrentParameters();
-            }
-        }
-
-        public virtual float TriggerLevel
-        {
-            get
-            {
-                var output = Measurements.GetScaledData(_triggerLevel, _voltPerDiv, ScopeConfig.PointsPerDiv, _verticalPosition, ScopeConfig.VerticalPositionChangeableByHost);
-                return output;
-            }
-
-            set
-            {
-                _triggerLevel = Measurements.GetRawData((float)value, _voltPerDiv, ScopeConfig.PointsPerDiv);
-                SetCurrentParameters();
-            }
-        }
-
-        public IParameter<Config.VerticalSensitivity> Sensitivity
-        {
-            get
-            {
-                return _Sensitivity;
-            }
-
-            set
-            {
-                _Sensitivity = value;
-                SetCurrentParameters();
-            }
-        }
-
-        public IParameter<Config.TriggerMode> TriggerMode
-        {
-            get
-            {
-                return _TriggerMode;
-            }
-
-            set
-            {
-                _TriggerMode = value;
-                SetCurrentParameters();
-            }
-        }
-
-        public IParameter<Config.Coupling> Couple
-        {
-            get
-            {
-                return _Couple;
-            }
-
-            set
-            {
-                _Couple = value;
-                SetCurrentParameters();
-            }
-        }
-
-        public IParameter<Config.Slope> TriggerSlope
-        {
-            get
-            {
-                return _TriggerSlope;
-            }
-
-            set
-            {
-                _TriggerSlope = value;
-                SetCurrentParameters();
-            }
-        }
-
-        public IParameter<Config.RecordLength> RecordLength
-        {
-            get
-            {
-                return _RecordLength;
-            }
-
-            set
-            {
-                _RecordLength = value;
-                SetCurrentParameters();
-
-            }
-        }
-        public string ScopeName
-        {
-            get
-            {
-                return Convert.ToString(_scopeType);
-            }
-        }
-
-        public IParameter<float> CurrentVoltageLimit
-        {
-            get
-            {
-                return new Parameter<float>("Voltage limit", Convert.ToString(_voltPerDiv * 6), "V", true, _voltPerDiv * 6);
             }
         }
     }
