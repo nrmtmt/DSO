@@ -57,24 +57,21 @@ namespace DSO.Utilities
                     {
                         WriteFrame(new DataFrames.ScopeControlDataFrames.EnterUSBScopeMode(), Scope.SerialPort);
                     }
-                    return ReturnFrame(ReturnType, Scope.ShortBuffer);
+                    try
+                    {
+                        return ReturnFrame(ReturnType, Scope.ShortBuffer);
+
+                    }catch(Exception)
+                    {
+                        return ReturnFrame(ReturnType, Scope.LongBuffer);
+                    }
+                   
                 }
                 catch (InvalidDataFrameException ex)
                 {
                     lastEx = ex;
                 }
             }
-
-            //return ReturnFrame(ReturnType, Scope.ShortBuffer, Scope.TimeoutTime);
-            // GetAcknowledgedFrame(SendType, ReturnType, Scope);
-            //return null;
-
-            //stringData = "";
-            //foreach (var data in scope.ShortBuffer)
-            //{
-            //    stringData += data + ",";
-            //}
-            //stringData.Remove(stringData.Length - 1);
             throw new FrameNotAcknowledgedException($"Timeout while waiting for frame acknowledge: " + SendType.ToString() + ", " + ReturnType.ToString() + Environment.NewLine+ "Add. err: "+lastEx.StackTrace);
         }
 
@@ -119,9 +116,7 @@ namespace DSO.Utilities
 
         private bool WriteFrame(DataFrame frame, IStreamResource port)
         {
-            //Monitor.Enter(port);
             port.Write(frame.Data, 0, frame.Data.Count());
-            //Monitor.Exit(port);
             return true;
         }
     }

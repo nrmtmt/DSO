@@ -1,4 +1,5 @@
-﻿using DSO.DataFrames.DSO112;
+﻿using DSO.DataFrames;
+using DSO.DataFrames.DSO112;
 using DSO.Exceptions;
 using DSO.Interfaces;
 using DSO.Utilities;
@@ -51,16 +52,34 @@ namespace DSO.DSO112
 
         protected override bool ChangeParamAcknowledged()
         {
-            Queue<byte> tempBuff = new Queue<byte>();
-            tempBuff = _CurrentBuffer;
             try
             {
-                var cmd = new DataFrames.DSO112.CommandAcknowledgedDataFrame(tempBuff.ToArray());
+                var cmd = new DataFrames.DSO112.CommandAcknowledgedDataFrame(LongBuffer);
                 return true;
             }
             catch (InvalidDataFrameException)
             {
-                return false;
+                var curParam = Get_CurParamDataFrame_From_Current_Object_State();
+                CurrParamDataFrame curParam2 = null;
+
+                try
+                {
+                    curParam2 = (CurrParamDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
+                    (typeof(DataFrames.ScopeControlDataFrames.GetParameters), typeof(CurrParamDataFrame), this);
+                }
+                catch (DSO.Exceptions.FrameNotAcknowledgedException)
+                {
+                    return false;
+                }
+
+                if (!curParam.Equals(curParam2))
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
             }
 
         }

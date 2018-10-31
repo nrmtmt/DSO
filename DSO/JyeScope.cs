@@ -145,13 +145,12 @@ namespace DSO
                 _DataBuffer.Enqueue(data);
             }
 
-            if (_DataBuffer.Count() > (int)_RecordLength.GetParameter && ScopeConfig != null)
+            if (_DataBuffer.Count() > (int)_RecordLength.GetParameter*2 && ScopeConfig != null)
             {
                 var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, (int)_RecordLength.GetParameter, _verticalPosition, ScopeConfig.VerticalPositionChangeableByHost);
                 if ( measurements!= null)
                 {
                     NewDataInBuffer(measurements, null);
-                    _GetCurrentParameters();
                 }
 
                 foreach (byte data in _CurrentBuffer)
