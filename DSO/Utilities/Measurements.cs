@@ -46,12 +46,8 @@ namespace DSO.Utilities
                     var DataFrame = new DataSampleDataFrame(data);
                     if (DataFrame != null)
                     {
-                        byte[] rawData = new byte[DataFrame.Data.Count() - 13]; //3 reserved
-                        for (int i = 5; i < DataFrame.Data.Count() - 9; i++)
-                        {
-                            rawData[i - 5] = DataFrame.Data[i];
-                        }
-
+                        byte[] rawData = new byte[1];
+                        rawData[0] = DataFrame.Data[5];
                         return getScaledMeasurements(rawData, voltsPerDiv, pointsPerDiv, vertPos, VposChangeable) ?? null;
                     }
                 }
@@ -82,7 +78,7 @@ namespace DSO.Utilities
         ///<param name="recordLength">Current scope record length</param>
         ///</summary>
         ///
-        public static float GetScaledData(int data, float voltsPerDiv, int pointsPerDiv, int vertPos, bool VposChangeable) ///to be changed
+        public static float GetScaledData(int data, float voltsPerDiv, int pointsPerDiv, int vertPos, bool VposChangeable)
         {
             if (VposChangeable)
             {

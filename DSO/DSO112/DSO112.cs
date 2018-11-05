@@ -59,27 +59,7 @@ namespace DSO.DSO112
             }
             catch (InvalidDataFrameException)
             {
-                var curParam = Get_CurParamDataFrame_From_Current_Object_State();
-                CurrParamDataFrame curParam2 = null;
-
-                try
-                {
-                    curParam2 = (CurrParamDataFrame)new AcknowledgedFrame().GetAcknowledgedFrame
-                    (typeof(DataFrames.ScopeControlDataFrames.GetParameters), typeof(CurrParamDataFrame), this);
-                }
-                catch (DSO.Exceptions.FrameNotAcknowledgedException)
-                {
-                    return false;
-                }
-
-                if (!curParam.Equals(curParam2))
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                return false;
             }
 
         }

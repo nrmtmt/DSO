@@ -25,7 +25,6 @@ namespace DSO
         public event System.EventHandler NewDataInBuffer = delegate { };
         public bool Connect()
         {
-
             Thread BackgroundReader = new Thread(ReadBuffer);
             BackgroundReader.IsBackground = true;
             BackgroundReader.Start();
@@ -250,7 +249,7 @@ namespace DSO
         public delegate void NewDataInBufferEventHandler();
         public delegate void InfoEventHandler();
 
-        protected int timeoutTime = 500; //time in with TimeoutException will be thrown
+        protected int timeoutTime = 1000; //time in with TimeoutException will be throw
         //back fields
 
         private IParameter<Config.Timebase> _TimeBase;
@@ -335,7 +334,7 @@ namespace DSO
             set
             {
                 _readDelay = value;
-                timeoutTime = _readDelay * 5;
+                timeoutTime = _readDelay * 10;
             }
         }
 
@@ -369,7 +368,7 @@ namespace DSO
                 _DataBuffer.Enqueue(data);
             }
 
-            if (_DataBuffer.Count() > (int)_RecordLength.GetParameter*2 && ScopeConfig != null)
+            if (_DataBuffer.Count() > 5 && ScopeConfig != null)
             {
                 var measurements = Measurements.GetFromBuffer(_DataBuffer.ToArray(), _voltPerDiv, ScopeConfig.PointsPerDiv, (int)_RecordLength.GetParameter, _verticalPosition, ScopeConfig.VerticalPositionChangeableByHost);
                 if ( measurements!= null)
@@ -426,10 +425,8 @@ namespace DSO
                 _voltPerDiv = param.VoltagePerDiv;
                 _triggerPos = param.TriggerPosition;
                 _triggerLevel = param.TriggerLevel;
-
                 return param;
 
-               
             } catch (FrameNotAcknowledgedException ex)
             {
                 return null;
@@ -466,7 +463,7 @@ namespace DSO
         ///
         public bool SetCurrentParameters()
         {
-
+            CurrParamDataFrame param = null;
             var stopwatch = Stopwatch.StartNew();
             while (stopwatch.ElapsedMilliseconds < timeoutTime) 
             {
@@ -477,7 +474,10 @@ namespace DSO
                     WriteFrame(curParam);
                 } catch (Exception ex)
                 {
-                    _GetCurrentParameters();
+                   while(param != null)
+                    {
+                        param = _GetCurrentParameters();
+                    }
                     throw new ParametersNotSetException("Cannot set parameters. Error while writing or creating DataFrame: " + ex.Message);
                 }
                 Thread.Sleep(_readDelay);
@@ -490,10 +490,12 @@ namespace DSO
                     return true;
                 }
             }
-            _GetCurrentParameters();
+            while (param != null)
+            {
+                param = _GetCurrentParameters();
+            }
             throw new ParametersNotSetException("Cannot set parameters. Timeout while waiting for acknowledge.");
         }
-
 
         private void ReadBuffer()
         {
@@ -505,9 +507,7 @@ namespace DSO
                 if(bufferSize > 5)
                 {
                     _CurrentBuffer.Clear();
-                    //Monitor.Enter(SerialPort);
                     SerialPort.Read(buffer, 0, bufferSize);
-                    //Monitor.Exit(SerialPort);
                     foreach (var item in buffer)
                     {
                         _CurrentBuffer.Enqueue(item);
