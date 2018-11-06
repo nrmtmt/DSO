@@ -2,7 +2,7 @@
 This library is intended to work with variety of JyeTech scopes. It has simple interface and can be easily added to other projects.<br> 
 Supported models:<br>
 - DSO068 - fully supported<br>
-- DSO112A - partially supported (scope has bugs in serial interface)</br></br>
+- DSO112A - partially supported (scope has bugs in serial interface)</br>
 Other JyeScope scopes that support serial interface (DSO094, DSO082 etc.) should work in DSO068 mode but this is untested.<br>
 See wiki for more information: <br>
 https://github.com/nrmtmt/DSO/wiki <br>
