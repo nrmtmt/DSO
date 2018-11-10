@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO
+namespace DSO.DataFrames
 {
     public class DataSampleDataFrame : DataFrame
     {

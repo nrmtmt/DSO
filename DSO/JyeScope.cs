@@ -17,7 +17,7 @@ using System.Text.RegularExpressions;
 
 namespace DSO
 {
-    public abstract class JyeScope : DSO.IScope
+    public abstract class JyeScope : IScope
     {
         //Interface implementation
 
@@ -233,6 +233,14 @@ namespace DSO
                 return Convert.ToString(_scopeType);
             }
         }
+        public IParameter<int> DataSamplesPerDiv
+        {
+            get
+            {
+                return new Parameter<int>("Data samples per division", Convert.ToString(ScopeConfig.PointsPerDiv), "Samples", true, ScopeConfig.PointsPerDiv);
+            }
+        }
+
 
         public IParameter<float> CurrentVoltageLimit
         {
@@ -285,7 +293,7 @@ namespace DSO
         protected ICurrentConfig ScopeConfig;
         private bool _stopCapture = false;
         protected float _voltPerDiv;
-       
+
 
         private Queue<byte> _DataBuffer = new Queue<byte>();
         protected Queue<byte> _CurrentBuffer = new Queue<byte>();
@@ -351,7 +359,6 @@ namespace DSO
                 SetCurrentParameters();
             }
         }
-
         public JyeScope(IStreamResource port)
         {
             SerialPort = port;

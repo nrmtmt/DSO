@@ -1,4 +1,6 @@
-﻿using DSO.Exceptions;
+﻿using DSO.DataFrames;
+using DSO.Exceptions;
+using DSO.Interfaces;
 using DSO.Utilities;
 using System;
 using System.Diagnostics;
@@ -32,9 +34,9 @@ namespace DSO
                         case Config.ScopeType.DSO094:
                             throw new ScopeNotSupportedException($"Scope recognized but not supported. Returned scope type: {(int)Ready.ScopeType}.");
                         case Config.ScopeType.DSO068:
-                            return new DSO068.DSO068(port);
+                            return new DSO068(port);
                         case Config.ScopeType.DSO112A:
-                            return new DSO112.DSO112(port);
+                            return new DSO112(port);
                         default:
                             throw new ScopeNotRecognizedException($"Scope not recognized. Returned scope type: {(int)Ready.ScopeType}.");
                     }

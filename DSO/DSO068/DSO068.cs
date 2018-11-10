@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO.DSO068
+namespace DSO
 {
     public class DSO068 : JyeScope
     {

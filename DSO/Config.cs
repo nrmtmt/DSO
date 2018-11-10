@@ -1,61 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DSO
 {
-    public static class ByteExtension
-    {
-        public static string ToHex(this Byte value)
-        {
-            return value.ToString("X");
-        }
-    }
-
-    public static class ArrayExtension
-    {
-        public static int ToInt(this Byte[] value)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                return BitConverter.ToInt16(value, 0);
-            }
-            else
-            {
-                value.Reverse();
-                return BitConverter.ToInt16(value, 0);
-            }
-        }
-        public static string ToCommaDelimitedString(this Byte[] value)
-        {
-            string Data = "";
-            foreach (var data in value)
-            {
-                Data += data + ",";
-            }
-            Data.Remove(Data.Length - 1);
-            return Data;
-        }
-    }
-    
-
-    public static class BitArrayExtension
-    {
-        public static byte ToByte(this BitArray bits)
-        {
-            if (bits.Count != 8)
-            {
-                throw new ArgumentException("bits");
-            }
-            byte[] bytes = new byte[1];
-            bits.CopyTo(bytes, 0);
-            return bytes[0];
-        }
-    }
-
     public class Config
     {
         public enum ScopeType
@@ -117,28 +66,28 @@ namespace DSO
             div50s = 7,
             div20s = 8,
             div10s = 9,
-            div5s = 10,//0x0A,
-            div2s = 11,//0x0B,
-            div1s = 12,//0x0c,
-            div500ms = 13,//0x0D,
-            div200ms = 14,//0x0E,
-            div100ms = 15,//0x0F,
-            div50ms = 16,//0x10,
-            div20ms = 17,//0x11,
-            div10ms = 18,//0x12,
-            div5ms = 19,//0x13,
-            div2ms = 20,//0x14,
-            div1ms = 21,//0x15,
-            div500us = 22,//0x16,
-            div200us = 23,//0x17,
-            div100us = 24,// 0x18,
-            div50us = 25,//0x19,
-            div20us = 26,//0x1A,
-            div10us = 27,//0x1B,
-            div5us = 28, //0x1C,
-            div2us = 29, //0x1D,
-            div1us = 30, //0x1E
-            div500ns = 31, //0x1f
+            div5s = 10,
+            div2s = 11,
+            div1s = 12,
+            div500ms = 13,
+            div200ms = 14,
+            div100ms = 15,
+            div50ms = 16,
+            div20ms = 17,
+            div10ms = 18,
+            div5ms = 19,
+            div2ms = 20,
+            div1ms = 21,
+            div500us = 22,
+            div200us = 23,
+            div100us = 24,
+            div50us = 25,
+            div20us = 26,
+            div10us = 27,
+            div5us = 28,
+            div2us = 29,
+            div1us = 30,
+            div500ns = 31,
             div200ns = 32,
             div100ns = 33,
             div50ns = 34,
@@ -177,7 +126,7 @@ namespace DSO
         {
             AREF = 0,
             AVCC = 1,
-            INTERNAL = 2      
+            INTERNAL = 2
         }
 
         public enum DataLoggerDataAdjustment

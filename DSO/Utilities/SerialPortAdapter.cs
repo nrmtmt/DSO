@@ -5,8 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Diagnostics;
+using DSO.Interfaces;
 
-namespace DSO
+namespace DSO.Utilities
 {
     /// <summary>
     ///     Concrete Implementor - http://en.wikipedia.org/wiki/Bridge_Pattern

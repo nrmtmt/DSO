@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO.DSO112
+namespace DSO
 {
     public class DSO112 :JyeScope
     {

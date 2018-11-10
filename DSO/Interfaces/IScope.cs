@@ -7,7 +7,7 @@ using System.IO.Ports;
 using DSO.Interfaces;
 using DSO.Parameters;
 
-namespace DSO
+namespace DSO.Interfaces
 {
     public interface IScope
     {
@@ -19,6 +19,7 @@ namespace DSO
         bool StopCapture();
         string ScopeName { get; }
         IParameter<float> CurrentVoltageLimit { get; }
+        IParameter<int> DataSamplesPerDiv { get; }
 
         List<IParameter<Config.Timebase>> AvailableTimebaseSettings { get; }
         List<IParameter<Config.Coupling>> AvailableCoupleSettings { get; }

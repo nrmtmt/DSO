@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DSO
+namespace DSO.Interfaces
 {
         /// <summary>
         ///     Represents a serial resource.

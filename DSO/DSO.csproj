@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
     <Compile Include="DataFrames\DSO068\CurrConfigDataFrame.cs" />
     <Compile Include="DataFrames\CurrParamDataFrame.cs" />
     <Compile Include="DataFrames\DataBlockDataFrame.cs" />
@@ -70,7 +71,7 @@
     <Compile Include="Utilities\AcknowledgedFrame.cs" />
     <Compile Include="Utilities\Measurements.cs" />
     <Compile Include="Utilities\SerialPortAdapter.cs" />
-    <Compile Include="Utilities\Util.cs" />
+    <Compile Include="Utilities\Extensions.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
