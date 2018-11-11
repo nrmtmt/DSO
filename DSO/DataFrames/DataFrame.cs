@@ -33,7 +33,7 @@ namespace DSO.DataFrames
                         {
                             var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
 
-                            if (frameSize > 3 && frameSize < 16384) //to avoid blank or corrupted frames //need to change to something more sophisticated
+                            if (frameSize > 3 && frameSize < 16456) //to avoid blank or corrupted frames //max value is from Config.RecordLength + 72 //need to change whole search method to more sophisticated
                             {
                                 byte[] frame = new byte[frameSize + 1];
                                 for (int z = 0; z <= frameSize; z++)

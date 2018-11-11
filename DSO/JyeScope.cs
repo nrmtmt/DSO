@@ -434,7 +434,7 @@ namespace DSO
                 _triggerLevel = param.TriggerLevel;
                 return param;
 
-            } catch (FrameNotAcknowledgedException ex)
+            } catch (Exception)
             {
                 return null;
             }
