@@ -28,16 +28,19 @@ namespace DSO
             Thread BackgroundReader = new Thread(ReadBuffer);
             BackgroundReader.IsBackground = true;
             BackgroundReader.Start();
-
-
-            var Ready = (DataFrames.ScopeControlDataFrames.ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
-                        (typeof(DataFrames.ScopeControlDataFrames.EnterUSBScopeMode), typeof(DataFrames.ScopeControlDataFrames.ScopeReady), this);
-
-            ScopeConfig = GetCurrentConfig();
-            PopulateConfigDictionaries();
-            _GetCurrentParameters();
-            _scopeType = Ready.ScopeType;
-            return true;
+            try
+            {
+                var Ready = (DataFrames.ScopeControlDataFrames.ScopeReady)new AcknowledgedFrame().GetAcknowledgedFrame
+                      (typeof(DataFrames.ScopeControlDataFrames.EnterUSBScopeMode), typeof(DataFrames.ScopeControlDataFrames.ScopeReady), this);
+                ScopeConfig = GetCurrentConfig();
+                PopulateConfigDictionaries();
+                _GetCurrentParameters();
+                _scopeType = Ready.ScopeType;
+                return true;
+            } catch (FrameNotAcknowledgedException)
+            {
+                return false;
+            }
         }
 
         public bool Disconnect()
