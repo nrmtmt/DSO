@@ -12,4 +12,6 @@ https://jyetech.com/forum/viewtopic.php?f=15&t=1758<br>
 For now this project contains a basic gui for mainly testing purposes. It offers limited basic functionality. Gui is not part of this project, it is attached as separate .exe in ZIP file available at Release tab:<br> For anyone interested in source files of GUI, please ask by adding new post to forum thread (link above).
 All releases of this library are availabe here:
 https://github.com/nrmtmt/DSO/releases<br>
-I have plans to start working with proper scope GUI and after finishing work with this library, separate GitHub project will be created for GUI.
+Quick overview of GUI:
+https://github.com/nrmtmt/DSO/releases/download/0.18.11.12/Quick.overview.pdf
+I have plans to start working with more fancy scope GUI and after finishing work with this library, separate GitHub project will be created for GUI.
