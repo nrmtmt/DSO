@@ -10,7 +10,7 @@ https://github.com/nrmtmt/DSO/wiki <br>
 You can visit JyeTech forum post about this project:<br>
 https://jyetech.com/forum/viewtopic.php?f=15&t=1758<br>
 For now this project contains a basic gui for mainly testing purposes. It offers limited basic functionality. Gui is not part of this project, it is attached as separate .exe in ZIP file available at Release tab:<br> For anyone interested in source files of GUI, please ask by adding new post to forum thread (link above).
-All releases of this library are availabe here:
+All releases of this library are availabe here:<br>
 https://github.com/nrmtmt/DSO/releases<br>
 Quick overview of GUI:
 https://github.com/nrmtmt/DSO/releases/download/0.18.11.12/Quick.overview.pdf
