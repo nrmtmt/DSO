@@ -512,17 +512,24 @@ namespace DSO
             SerialPort.DiscardInBuffer();
             while (!_stopCapture)
             {
-                int bufferSize = SerialPort.BytesToRead;
-                byte[] buffer = new byte[bufferSize];
-                if(bufferSize > 5)
+                try
                 {
-                    _CurrentBuffer.Clear();
-                    SerialPort.Read(buffer, 0, bufferSize);
-                    foreach (var item in buffer)
+                    int bufferSize = SerialPort.BytesToRead;
+                    byte[] buffer = new byte[bufferSize];
+                    if (bufferSize > 5)
                     {
-                        _CurrentBuffer.Enqueue(item);
+                        _CurrentBuffer.Clear();
+                        SerialPort.Read(buffer, 0, bufferSize);
+                        foreach (var item in buffer)
+                        {
+                            _CurrentBuffer.Enqueue(item);
+                        }
+                        Port_DataReceivedEvent(buffer, null);
                     }
-                    Port_DataReceivedEvent(buffer, null);
+                }
+                catch (NullReferenceException)
+                {
+                    //port disposed, no worries
                 }
                 Thread.Sleep(_readDelay);
             }
