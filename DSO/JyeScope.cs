@@ -529,7 +529,8 @@ namespace DSO
                 }
                 catch (NullReferenceException)
                 {
-                    //port disposed, no worries
+                    //port disposed or disconnected, halt reading
+                    _stopCapture = true;
                 }
                 Thread.Sleep(_readDelay);
             }
