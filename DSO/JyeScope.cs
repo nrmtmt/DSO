@@ -17,8 +17,17 @@ using System.Text.RegularExpressions;
 
 namespace DSO
 {
-    public abstract class JyeScope : IScope
+    public abstract class JyeScope : IScope, IDisposable
     {
+        ~JyeScope()
+        {
+            Destroy();
+        }
+        public void Dispose()
+        {
+            Destroy();
+        }
+
         //Interface implementation
 
         //interface event. New measurements are measured by device. At this moment this delegate is generic.
@@ -404,7 +413,10 @@ namespace DSO
 
         protected bool WriteFrame(DataFrame frame)
         {
-            SerialPort.Write(frame.Data, 0, frame.Data.Count());
+            if (!_stopCapture)
+            {
+                SerialPort.Write(frame.Data, 0, frame.Data.Count());
+            }
             return true;
         }
 
@@ -529,7 +541,13 @@ namespace DSO
                 }
                 catch (NullReferenceException)
                 {
-                    //port disposed, no worries
+                    //port disposed or disconnected, halt reading
+                    _stopCapture = true;
+                }
+                catch (InvalidOperationException)
+                {
+                    //port disposed or disconnected, halt reading
+                    _stopCapture = true;
                 }
                 Thread.Sleep(_readDelay);
             }
