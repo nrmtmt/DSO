@@ -9,7 +9,8 @@ See wiki for more information: <br>
 https://github.com/nrmtmt/DSO/wiki <br>
 You can visit JyeTech forum post about this project:<br>
 https://jyetech.com/forum/viewtopic.php?f=15&t=1758<br>
-For now this project contains a basic gui for mainly testing purposes. It offers limited basic functionality. Gui is not part of this project, it is attached as separate .exe in ZIP file available at Release tab:<br> For anyone interested in source files of GUI, please ask by adding new post to forum thread (link above).
+Link for GUI download (GUI contains newest DSO.dll file available at its compiling, here may be newer version of DSO.dll file):<br>
+https://github.com/nrmtmt/PC_Scope/releases/latest<br>
 All releases of this library are availabe here:<br>
 https://github.com/nrmtmt/DSO/releases<br>
 Quick overview of GUI:<br>
