@@ -11,6 +11,7 @@ namespace DSO.DataFrames
     public abstract class DataFrame
     {
         private static readonly byte SyncChar = 254;
+        private static readonly byte MaxFrameSize = 16456;
 
         public DataFrame()
         {
@@ -33,7 +34,7 @@ namespace DSO.DataFrames
                         {
                             var frameSize = (ushort)((data[i - 1] << 8) + data[i - 2]);
 
-                            if (frameSize > 3 && frameSize < 16456) //to avoid blank or corrupted frames //max value is from Config.RecordLength + 72 //need to change whole search method to more sophisticated
+                            if (frameSize > 3 && frameSize < MaxFrameSize) //to avoid blank or corrupted frames //max value is from Config.RecordLength + 72 //need to change whole search method to more sophisticated
                             {
                                 byte[] frame = new byte[frameSize + 1];
                                 for (int z = 0; z <= frameSize; z++)
@@ -129,7 +130,7 @@ namespace DSO.DataFrames
                     {
                         throw new InvalidDataFrameException("Wrong DataFrame - invalid SyncCharacter");
                     }
-                    if (FrameSize < 3 || FrameSize > 1096)
+                    if (FrameSize < 3 || FrameSize > MaxFrameSize)
                     {
                         throw new InvalidDataFrameException("Wrong DataFrame - invalid FrameSize");
                     }
