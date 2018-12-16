@@ -11,7 +11,7 @@ namespace DSO.DataFrames
     public abstract class DataFrame
     {
         private static readonly byte SyncChar = 254;
-        private static readonly byte MaxFrameSize = 16456;
+        private static readonly int MaxFrameSize = 16456;
 
         public DataFrame()
         {

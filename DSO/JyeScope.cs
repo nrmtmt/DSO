@@ -68,14 +68,25 @@ namespace DSO
 
         public bool StartCapture()
         {
-            WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.EnterUSBScopeMode());
-            return true;
+            if (WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.EnterUSBScopeMode()) == true)
+            {
+                return true;
+            }else
+            {
+                return false;
+            }
         }
 
         public bool StopCapture()
         {
-            WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.ExitUSBScopeMode());
-            return true;
+            if (WriteFrame(new DSO.DataFrames.ScopeControlDataFrames.ExitUSBScopeMode()) == true)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public List<IParameter<Config.Timebase>> AvailableTimebaseSettings
@@ -415,9 +426,23 @@ namespace DSO
         {
             if (!_stopCapture)
             {
-                SerialPort.Write(frame.Data, 0, frame.Data.Count());
+                try
+                {
+                    SerialPort.Write(frame.Data, 0, frame.Data.Count());
+                }
+                catch (InvalidOperationException)
+                {
+                    return false;
+                }
+                catch (NullReferenceException)
+                {
+                    return false;
+                }
+                return true;
+            }else
+            {
+                return false;
             }
-            return true;
         }
 
         ///<summary>

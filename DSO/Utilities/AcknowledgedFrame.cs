@@ -116,8 +116,15 @@ namespace DSO.Utilities
 
         private bool WriteFrame(DataFrame frame, IStreamResource port)
         {
-            port.Write(frame.Data, 0, frame.Data.Count());
-            return true;
+            try
+            {
+                port.Write(frame.Data, 0, frame.Data.Count());
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
         }
     }
 }
